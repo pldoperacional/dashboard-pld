@@ -188,8 +188,22 @@ function normTipo(raw){
   if(/compliance/i.test(s))return"Compliance";
   return s||"Outros";
 }
-function normRisco(raw){const s=raw.trim().toLowerCase();if(s==="highest"||s==="high"||s==="alto")return"Alto";if(s==="medium"||s==="médio"||s==="medio")return"Médio";return"Baixo"}
 
+function normRisco(raw) {
+  if (!raw) return "Baixo";
+
+  const s = String(raw)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .trim();
+
+  if (s.includes("alto") || s.includes("high") || s.includes("highest")) return "Alto";
+  if (s.includes("medio") || s.includes("medium")) return "Médio";
+  if (s.includes("baixo") || s.includes("low")) return "Baixo";
+
+  return "Baixo";
+}
 function parseWorkbook(wb){
   const results=[];
   for(const name of wb.SheetNames){
@@ -198,7 +212,27 @@ function parseWorkbook(wb){
       const id=String(row["Código"]||row["Chave"]||row["Key"]||row["Issue key"]||"").trim();
       if(!id)continue;
       const tipo=normTipo(String(row["Tipo de item"]||row["Issue Type"]||row["Tipo"]||""));
-      const risco=normRisco(String(row["Prioridade"]||row["Priority"]||row["Risco"]||""));
+      
+    let riscoRaw = "";
+
+    // REGRA CORRETA: para Alertas PLD, usar exclusivamente a Classificação Risco Usuário (coluna N)
+    if (tipo === "Alerta PLD") {
+      riscoRaw =
+        row["Classificação Risco Usuário"] ||
+        row["Classificacao Risco Usuario"] ||
+        row["Classificacao de Risco Usuario"] ||
+        "";
+    } else {
+      // fallback para outros tipos
+      riscoRaw =
+        row["Risco"] ||
+        row["Prioridade"] ||
+        row["Priority"] ||
+        "";
+    }
+
+    const risco = normRisco(riscoRaw);
+
       const transPld=parseDate(row["Data da Transação (PLD)"]||row["Data Transação PLD"]||row["Data Transação - PLD"]||row["Data Transacao PLD"]||row["Data da Transacao (PLD)"]||row["Data Transação"]||row["Transaction Date"]||row["Trans Date"]||row["Custom field (Data da Transação (PLD))"]||row["Custom field (Data Transação PLD)"]||null);
       results.push({
         id, resumo:String(row["Resumo"]||row["Summary"]||"").trim(),
