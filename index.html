@@ -121,7 +121,7 @@ footer{border-top:1px solid var(--border);padding:1rem 0 2rem;text-align:center;
   <div id="chartsGrid" class="charts-grid"></div>
 
   <!-- Person Correlation -->
-  <div id="personPanel" class="chart-card" style="display:none"></div>
+  <div id="personPanel" class="chart-card" style="display:none"></div>fdl
 
   <!-- Table -->
   <div id="tablePanel" class="chart-card" style="display:none"></div>
@@ -186,7 +186,7 @@ function normTipo(raw){
   if(/manipula/i.test(s))return"Manipulação de Resultados";
   if(/respons[aá]vel/i.test(s))return"Jogo Responsável";
   if(/compliance/i.test(s))return"Compliance";
-  return s||"Outros";
+  return s||"KYP Afiliados";
 }
 function normRisco(raw){const s=raw.trim().toLowerCase();if(s==="highest"||s==="high"||s==="alto")return"Alto";if(s==="medium"||s==="médio"||s==="medio")return"Médio";return"Baixo"}
 
