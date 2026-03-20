@@ -178,7 +178,7 @@ function parseWorkbook(wb){
       if(!id)continue;
       const tipo=normTipo(String(row["Tipo de item"]||row["Issue Type"]||row["Tipo"]||""));
       const risco=normRisco(String(row["Prioridade"]||row["Priority"]||row["Risco"]||""));
-      const transPld=parseDate(row["Data da Transação (PLD)"]||row["Data Transação PLD"]||row["Data Trans. PLD"]||row["Data Transacao PLD"]||row["Data da Transacao (PLD)"]||row["Data Transação"]||row["Transaction Date"]||row["Trans Date"]||row["Custom field (Data da Transação (PLD))"]||row["Custom field (Data Transação PLD)"]||null);
+      const transPld=parseDate(row["Data da Transação (PLD)"]||row["Data Transação PLD"]||row["Data Transação - PLD"]||row["Data Transacao PLD"]||row["Data da Transacao (PLD)"]||row["Data Transação"]||row["Transaction Date"]||row["Trans Date"]||row["Custom field (Data da Transação (PLD))"]||row["Custom field (Data Transação PLD)"]||null);
       results.push({
         id, resumo:String(row["Resumo"]||row["Summary"]||"").trim(),
         relator:row["Relator"]?String(row["Relator"]).trim():row["Reporter"]?String(row["Reporter"]).trim():null,
@@ -484,7 +484,7 @@ function renderTable(cases){
   const safePage=Math.min(tablePage,Math.max(0,totalPages-1));
   const pageData=sorted.slice(safePage*PAGE_SIZE,(safePage+1)*PAGE_SIZE);
 
-  const cols=[{f:'id',l:'ID'},{f:'tipo',l:'Tipo'},{f:'resumo',l:'Resumo'},{f:'status',l:'Status'},{f:'responsavel',l:'Responsável'},{f:'risco',l:'Risco'},{f:'sla',l:'SLA'},{f:'data_transacao_pld',l:'Data Trans. PLD'},{f:'criado',l:'Criado'},{f:'resolvido',l:'Resolvido'}];
+  const cols=[{f:'id',l:'ID'},{f:'tipo',l:'Tipo'},{f:'resumo',l:'Resumo'},{f:'status',l:'Status'},{f:'responsavel',l:'Responsável'},{f:'risco',l:'Risco'},{f:'sla',l:'SLA'},{f:'data_transacao_pld',l:'Data Transação - PLD'},{f:'criado',l:'Criado'},{f:'resolvido',l:'Resolvido'}];
   const arrow=f=>tableSortField===f?(tableSortDir==='desc'?'▼':'▲'):'⇅';
 
   let h=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem"><h3 class="chart-title" style="margin-bottom:0">Tabela Detalhada (${fmtNum(cases.length)} casos)</h3><div class="pagination">Pág. ${safePage+1} de ${totalPages} <button onclick="tablePage=Math.max(0,tablePage-1);renderAll()" ${safePage===0?'disabled':''}>‹</button><button onclick="tablePage=Math.min(${totalPages-1},tablePage+1);renderAll()" ${safePage>=totalPages-1?'disabled':''}>›</button></div></div>`;
