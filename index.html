@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard PLD & FinCrime</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --background: hsl(220,20%,96%); --foreground: hsl(215,30%,15%);
+  --card: hsl(0,0%,100%); --card-fg: hsl(215,30%,15%);
+  --primary: hsl(215,50%,23%); --primary-fg: hsl(210,40%,98%);
+  --muted: hsl(215,20%,92%); --muted-fg: hsl(215,15%,47%);
+  --border: hsl(215,25%,90%);
+  --risk-high: hsl(0,72%,51%); --risk-high-bg: hsl(0,100%,97%);
+  --risk-med: hsl(38,92%,50%); --risk-med-bg: hsl(48,96%,97%);
+  --risk-low: hsl(142,71%,35%); --risk-low-bg: hsl(142,76%,97%);
+  --coaf: hsl(263,70%,50%); --coaf-bg: hsl(263,100%,98%);
+  --status-open: hsl(217,91%,60%); --status-open-bg: hsl(217,100%,97%);
+  --status-done: hsl(142,71%,35%); --status-done-bg: hsl(142,76%,97%);
+  --radius: 0.75rem;
+}
+body{font-family:'Inter',sans-serif;background:var(--background);color:var(--foreground);-webkit-font-smoothing:antialiased}
+.container{max-width:1400px;margin:0 auto;padding:0 1rem}
+header{background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
+.header-inner{display:flex;align-items:center;justify-content:space-between;padding:1rem 0}
+.logo{width:36px;height:36px;border-radius:8px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:var(--primary-fg)}
+h1{font-size:1.125rem;font-weight:700} .subtitle{font-size:0.75rem;color:var(--muted-fg)}
+main{padding:1.5rem 0}main>*+*{margin-top:1.5rem}
+
+/* Upload */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:2rem;text-align:center;cursor:pointer;transition:all .2s}
+.upload-zone:hover{border-color:var(--primary);background:hsla(215,50%,23%,0.05)}
+
+/* Filters */
+.filters{display:flex;gap:0.75rem;flex-wrap:wrap}
+.filter-select,.filter-input{height:36px;border:1px solid var(--border);border-radius:8px;padding:0 0.75rem;font-size:0.75rem;background:var(--card);outline:none}
+.filter-select:focus,.filter-input:focus{border-color:var(--primary)}
+
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem;text-align:center;transition:box-shadow .2s}
+.kpi-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+.kpi-value{font-size:1.875rem;font-weight:800;letter-spacing:-0.025em}
+.kpi-label{font-size:0.75rem;color:var(--muted-fg);margin-top:0.25rem;font-weight:500}
+
+/* Charts */
+.charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
+@media(max-width:768px){.charts-grid{grid-template-columns:1fr}}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.chart-card.span-2{grid-column:span 2}
+@media(max-width:768px){.chart-card.span-2{grid-column:span 1}}
+.chart-title{font-size:0.875rem;font-weight:600;margin-bottom:1rem}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:2px 10px;border-radius:9999px;font-size:0.75rem;font-weight:600}
+.badge-risk-high{background:var(--risk-high-bg);color:var(--risk-high)}
+.badge-risk-med{background:var(--risk-med-bg);color:var(--risk-med)}
+.badge-risk-low{background:var(--risk-low-bg);color:var(--risk-low)}
+.badge-coaf{background:var(--coaf-bg);color:var(--coaf)}
+.badge-status-open{background:var(--status-open-bg);color:var(--status-open)}
+.badge-status-done{background:var(--status-done-bg);color:var(--status-done)}
+
+/* Table */
+.table-wrap{overflow-x:auto}
+table.data-table{width:100%;font-size:0.75rem;border-collapse:collapse}
+.data-table th{text-align:left;padding:0.625rem 0.75rem;color:var(--muted-fg);font-weight:500;border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap;user-select:none}
+.data-table th:hover{color:var(--foreground)}
+.data-table td{padding:0.5rem 0.75rem;border-bottom:1px solid var(--muted);white-space:nowrap}
+.data-table tr:hover td{background:hsla(215,20%,92%,0.5)}
+.mono-id{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--primary)}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--muted-fg)}
+.pagination button{border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:0.75rem;background:var(--card);cursor:pointer}
+.pagination button:disabled{opacity:0.3;cursor:default}
+
+/* Person panel */
+.person-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:0.75rem;margin-bottom:1rem}
+.mini-kpi{border:1px solid var(--border);border-radius:8px;padding:0.75rem;text-align:center}
+.mini-kpi .val{font-size:1.125rem;font-weight:700}
+.mini-kpi .lbl{font-size:0.75rem;color:var(--muted-fg);margin-top:2px}
+.expanded-cases{background:hsla(215,20%,92%,0.3);padding:0.75rem;margin:0 0.5rem 0.5rem;border-radius:8px}
+
+footer{border-top:1px solid var(--border);padding:1rem 0 2rem;text-align:center;font-size:0.75rem;color:var(--muted-fg)}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+</head>
+<body>
+
+<header>
+<div class="container header-inner">
+  <div style="display:flex;align-items:center;gap:0.75rem">
+    <div class="logo"><svg width="18" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+    <div><h1>Dashboard PLD & FinCrime</h1><p class="subtitle">Riscos & Compliance — Monitoramento Operacional</p></div>
+  </div>
+  <span class="subtitle" id="dateDisplay"></span>
+</div>
+</header>
+
+<main class="container">
+  <!-- Upload -->
+  <div class="upload-zone" id="uploadZone" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+    <svg width="28" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin:0 auto 0.75rem;display:block;color:var(--muted-fg)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <p style="font-size:0.875rem;font-weight:600">Carregar planilha</p>
+    <p style="font-size:0.75rem;color:var(--muted-fg);margin-top:0.25rem">Arraste ou clique para atualizar (formato .xlsx do Jira)</p>
+    <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none">
+  </div>
+
+  <!-- Filters -->
+  <div id="filtersSection" class="filters" style="display:none"></div>
+  <div id="dateFilters" class="filters" style="display:none;margin-top:0.75rem"></div>
+
+  <!-- KPIs -->
+  <div id="kpiGrid" class="kpi-grid"></div>
+
+  <!-- Charts -->
+  <div id="chartsGrid" class="charts-grid"></div>
+
+  <!-- Person Correlation -->
+  <div id="personPanel" class="chart-card" style="display:none"></div>
+
+  <!-- Table -->
+  <div id="tablePanel" class="chart-card" style="display:none"></div>
+
+  <footer>Dashboard de Compliance — Dados extraídos do Jira (RSC) — Uso interno</footer>
+</main>
+
+<script>
+// ==================== TYPES & CONSTANTS ====================
+const OPEN_STATUSES = ["Novo","Work in progress","Em Análise","Aguardando Retorno Diligências","Em Espera","Pendente","Comitê","Preparação","Aprovação","Aprovação Gestão Compliance"];
+const COAF_STATUSES = ["Comunicação COAF","Comunicado"];
+const TIPO_COLORS = {"Alerta PLD":"hsl(215,60%,45%)","KYP / Background Check":"hsl(38,85%,47%)","KYP / Monitoramento":"hsl(38,70%,45%)","Manipulação de Resultados":"hsl(330,81%,45%)","Jogo Responsável":"hsl(142,71%,35%)","Compliance":"hsl(263,70%,50%)"};
+const RISCO_COLORS = {"Alto":"hsl(0,72%,51%)","Médio":"hsl(38,92%,50%)","Baixo":"hsl(142,71%,35%)"};
+const PAGE_SIZE = 25;
+const JIRA_BASE_URL = "https://estrela-bet.atlassian.net/browse/";
+
+function isOpen(s){return OPEN_STATUSES.includes(s)}
+function isCoaf(s){return COAF_STATUSES.includes(s)}
+function getSlaDays(tipo){if(tipo==="Alerta PLD")return 30;if(tipo==="Manipulação de Resultados")return 15;if(tipo==="KYP / Monitoramento")return 2;return 30}
+function getSlaRefDate(c){if(c.tipo==="Alerta PLD")return c.data_transacao_pld||c.criado;return c.criado}
+function getSlaStatus(c){if(!isOpen(c.status)&&!isCoaf(c.status))return"resolved";const days=getSlaDays(c.tipo);const ref=getSlaRefDate(c);if(!ref)return"ok";const elapsed=(Date.now()-new Date(ref).getTime())/864e5;if(elapsed>days)return"breached";if(elapsed>days*0.8)return"warning";return"ok"}
+function getSlaElapsed(c){const ref=getSlaRefDate(c);if(!ref)return null;return Math.round((Date.now()-new Date(ref).getTime())/864e5)}
+function getStatusCategory(s){if(COAF_STATUSES.includes(s))return"coaf";if(!OPEN_STATUSES.includes(s))return"closed";return"open"}
+function fmtDate(d){if(!d)return"—";const dt=new Date(d);if(isNaN(dt))return"—";return dt.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"2-digit"})}
+function fmtNum(n){return n.toLocaleString("pt-BR")}
+
+// ==================== PARSER ====================
+function parseDate(value){
+  if(!value)return null;
+  if(typeof value==='number'){const d=XLSX.SSF.parse_date_code(value);if(d)return new Date(d.y,d.m-1,d.d,d.H||0,d.M||0,d.S||0).toISOString()}
+  const str=String(value).trim();if(!str)return null;
+  const br=str.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if(br){const dt=new Date(br[3]+'-'+br[2]+'-'+br[1]);if(!isNaN(dt))return dt.toISOString()}
+  const dt=new Date(str);return isNaN(dt)?null:dt.toISOString();
+}
+function normTipo(raw){
+  const s=raw.trim();
+  if(/pld/i.test(s)||/^tarefa$/i.test(s))return"Alerta PLD";
+  if(/background/i.test(s))return"KYP / Background Check";
+  if(/monitoramento/i.test(s))return"KYP / Monitoramento";
+  if(/manipula/i.test(s))return"Manipulação de Resultados";
+  if(/respons[aá]vel/i.test(s))return"Jogo Responsável";
+  if(/compliance/i.test(s))return"Compliance";
+  return s||"Outros";
+}
+function normRisco(raw){const s=raw.trim().toLowerCase();if(s==="highest"||s==="high"||s==="alto")return"Alto";if(s==="medium"||s==="médio"||s==="medio")return"Médio";return"Baixo"}
+
+function parseWorkbook(wb){
+  const results=[];
+  for(const name of wb.SheetNames){
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[name]);
+    for(const row of rows){
+      const id=String(row["Código"]||row["Chave"]||row["Key"]||row["Issue key"]||"").trim();
+      if(!id)continue;
+      const tipo=normTipo(String(row["Tipo de item"]||row["Issue Type"]||row["Tipo"]||""));
+      const risco=normRisco(String(row["Prioridade"]||row["Priority"]||row["Risco"]||""));
+      const transPld=parseDate(row["Data da Transação (PLD)"]||row["Data Transação PLD"]||row["Data Trans. PLD"]||row["Data Transacao PLD"]||row["Data da Transacao (PLD)"]||row["Data Transação"]||row["Transaction Date"]||row["Trans Date"]||row["Custom field (Data da Transação (PLD))"]||row["Custom field (Data Transação PLD)"]||null);
+      results.push({
+        id, resumo:String(row["Resumo"]||row["Summary"]||"").trim(),
+        relator:row["Relator"]?String(row["Relator"]).trim():row["Reporter"]?String(row["Reporter"]).trim():null,
+        prioridade:String(row["Prioridade"]||row["Priority"]||"").trim(),
+        criado:parseDate(row["Criado"]||row["Created"]),
+        atualizado:parseDate(row["Atualizado(a)"]||row["Atualizado"]||row["Updated"]),
+        resolvido:parseDate(row["Resolvido"]||row["Resolved"]),
+        responsavel:row["Responsável"]?String(row["Responsável"]).trim():row["Assignee"]?String(row["Assignee"]).trim():null,
+        status:String(row["Status"]||"").trim(), tipo, risco, data_transacao_pld:transPld,
+      });
+    }
+  }
+  return results;
+}
+
+// ==================== PERSON CORRELATION ====================
+function extractCPF(r){const m=r.match(/(\d{11})/);return m?m[1]:null}
+function extractEmail(r){const m=r.match(/[\w.-]+@[\w.-]+\.\w+/);return m?m[0].toLowerCase():null}
+function formatCPF(c){return c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,"$1.$2.$3-$4")}
+function buildPersonCorrelations(cases){
+  const map=new Map();
+  for(const c of cases){const cpf=extractCPF(c.resumo);const email=extractEmail(c.resumo);const id=cpf||email;if(!id)continue;const ex=map.get(id);if(ex)ex.cases.push(c);else map.set(id,{type:cpf?'cpf':'email',cases:[c]})}
+  const sixAgo=new Date();sixAgo.setMonth(sixAgo.getMonth()-6);const corr=[];
+  for(const[id,data]of map){
+    const open=data.cases.filter(c=>isOpen(c.status)).length;
+    const coafC=data.cases.filter(c=>isCoaf(c.status));
+    const closed=data.cases.filter(c=>!isOpen(c.status)&&!isCoaf(c.status)).length;
+    const coafDates=coafC.map(c=>c.atualizado||c.criado).filter(Boolean).map(d=>new Date(d)).sort((a,b)=>b-a);
+    const lastCoaf=coafDates.length?coafDates[0].toISOString():null;
+    const coafRecent=coafDates.some(d=>d>=sixAgo);
+    const allDates=data.cases.map(c=>c.criado).filter(Boolean).map(d=>new Date(d)).sort((a,b)=>a-b);
+    const hiCount=data.cases.filter(c=>c.risco==="Alto").length;
+    const risk=hiCount>data.cases.length/2?"Alto":data.cases.some(c=>c.risco==="Médio")?"Médio":"Baixo";
+    corr.push({identifier:id,type:data.type,totalCases:data.cases.length,openCases:open,closedCases:closed,coafCases:coafC.length,coafInLast6Months:coafRecent,lastCoafDate:lastCoaf,cases:data.cases,riskLevel:risk,firstCaseDate:allDates.length?allDates[0].toISOString():null,lastCaseDate:allDates.length?allDates[allDates.length-1].toISOString():null});
+  }
+  return corr.sort((a,b)=>b.totalCases-a.totalCases);
+}
+
+// ==================== STATE ====================
+let allCases=[];
+let filters={tipo:'',risco:'',responsavel:'',status:'',sla:'',text:'',dateFrom:'',dateTo:'',transFrom:'',transTo:''};
+let tablePage=0;
+let tableSortField='criado';
+let tableSortDir='desc';
+let expandedPerson=null;
+let personSortBy='totalCases';
+let personSearch='';
+let chartInstances=[];
+
+
+// ===== Enable values inside bars =====
+Chart.register(ChartDataLabels);
+Chart.defaults.plugins.datalabels = {
+  color: '#0f172a',
+  anchor: 'center',
+  align: 'center',
+  font: { size: 10, weight: '600' },
+  formatter: (v) => v
+};
+
+// ==================== INIT ====================
+document.getElementById('dateDisplay').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+document.getElementById('uploadZone').addEventListener('click',()=>document.getElementById('fileInput').click());
+document.getElementById('fileInput').addEventListener('change',e=>{const f=e.target.files[0];if(f)loadFile(f);e.target.value=''});
+
+function handleDrop(e){e.preventDefault();const f=e.dataTransfer.files[0];if(f)loadFile(f)}
+function loadFile(file){
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const data=new Uint8Array(ev.target.result);
+    const wb=XLSX.read(data,{type:'array'});
+    allCases=parseWorkbook(wb);
+    const now=new Date(),ago=new Date(now);ago.setMonth(ago.getMonth()-3);
+    filters={tipo:'',risco:'',responsavel:'',status:'',sla:'',text:'',dateFrom:ago.toISOString().slice(0,10),dateTo:now.toISOString().slice(0,10),transFrom:'',transTo:''};
+    tablePage=0;
+    renderAll();
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// Load sample data
+const SAMPLE=[{"id":"RP-10530","resumo":"Sportradar Integrity Exchange - Flagged Match - Football - Tanzania Prisons vs Singida Black Stars SC","relator":"Vinicius Tonini dos Santos","prioridade":"Highest","criado":"2026-03-19T07:00:00","atualizado":"2026-03-19T07:00:00","resolvido":null,"responsavel":"Vinicius Tonini dos Santos","status":"Novo","tipo":"Manipulação de Resultados","risco":"Alto","data_transacao_pld":null},{"id":"RP-10529","resumo":"Sportradar Integrity Exchange - Flagged Match - Football - Kitara FC vs Bunyaruguru United FC","relator":"Vinicius Tonini dos Santos","prioridade":"Highest","criado":"2026-03-19T06:58:00","atualizado":"2026-03-19T06:58:00","resolvido":null,"responsavel":"Vinicius Tonini dos Santos","status":"Novo","tipo":"Manipulação de Resultados","risco":"Alto","data_transacao_pld":null},{"id":"RP-10528","resumo":"Sportradar Integrity Exchange - Flagged Match - Football - Hindustan FC vs National United SC","relator":"Vinicius Tonini dos Santos","prioridade":"Highest","criado":"2026-03-19T06:58:00","atualizado":"2026-03-19T06:58:00","resolvido":null,"responsavel":"Vinicius Tonini dos Santos","status":"Novo","tipo":"Manipulação de Resultados","risco":"Alto","data_transacao_pld":null},{"id":"RP-10527","resumo":"Sportradar Integrity Exchange - Flagged Match - Football - Karmiotissa FC vs AO Agia Napa","relator":"Vinicius Tonini dos Santos","prioridade":"Highest","criado":"2026-03-19T06:58:00","atualizado":"2026-03-19T06:58:00","resolvido":null,"responsavel":"Vinicius Tonini dos Santos","status":"Novo","tipo":"Manipulação de Resultados","risco":"Alto","data_transacao_pld":null},{"id":"RP-10526","resumo":"Sportradar Integrity Exchange - Flagged Match - Football - Nautico RR vs Progresso RR","relator":"Vinicius Tonini dos Santos","prioridade":"Highest","criado":"2026-03-19T06:58:00","atualizado":"2026-03-19T06:58:00","resolvido":null,"responsavel":"Vinicius Tonini dos Santos","status":"Novo","tipo":"Manipulação de Resultados","risco":"Alto","data_transacao_pld":null},{"id":"RP-10525","resumo":"Depósitos 50k Mês - 09520897933","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10524","resumo":"Depósitos 50k Mês - 29047583809","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:30:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10523","resumo":"Depósitos 50k Mês - 03483605339","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:30:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-01T00:00:00"},{"id":"RP-10522","resumo":"Depósitos 50k Mês - 00584432070","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:30:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-01T00:00:00"},{"id":"RP-10521","resumo":"Depósitos 50k Mês - 54929504287","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:30:00","resolvido":"2026-03-18T17:30:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10520","resumo":"Depósitos 50k Mês - 63562421168","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:30:00","resolvido":"2026-03-18T17:30:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10519","resumo":"Depósitos 50k Mês - 05885194564","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:30:00","resolvido":"2026-03-18T17:30:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-03T00:00:00"},{"id":"RP-10518","resumo":"Depósitos 50k Mês - 14332526783","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10517","resumo":"Depósitos 50k Mês - 12978041714","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:30:00","resolvido":"2026-03-18T17:30:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10516","resumo":"Depósitos 50k Mês - 06956551322","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10515","resumo":"Depósitos 50k Mês - 93727640278","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-03T00:00:00"},{"id":"RP-10514","resumo":"Depósitos 50k Mês - 02178726461","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10513","resumo":"Depósitos 50k Mês - 05210244989","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10512","resumo":"Depósitos 50k Mês - 17252631737","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10511","resumo":"Depósitos 50k Mês - 40351978828","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10510","resumo":"Depósitos 50k Mês - 13568072750","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-03T00:00:00"},{"id":"RP-10509","resumo":"Depósitos 50k Mês - 02043952404","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-03T00:00:00"},{"id":"RP-10508","resumo":"Depósitos 50k Mês - 02927239622","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-03T00:00:00"},{"id":"RP-10507","resumo":"Depósitos 50k Mês - 13755510359","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10506","resumo":"Depósitos 50k Mês - 11672658667","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10505","resumo":"Depósitos 50k Mês - 86255401049","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10504","resumo":"Depósitos 50k Mês - 50126651809","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10503","resumo":"Depósitos 50k Mês - 05838255323","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-03T00:00:00"},{"id":"RP-10502","resumo":"Depósitos 50k Mês - 13419543409","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10501","resumo":"Depósitos 50k Mês - 46590332878","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10500","resumo":"Depósitos 50k Mês - 30897617851","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10499","resumo":"Depósitos 50k Mês - 79654894904","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10498","resumo":"Depósitos 50k Mês - 43211389814","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-03T00:00:00"},{"id":"RP-10497","resumo":"Depósitos 50k Mês - 02780927720","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-03T00:00:00"},{"id":"RP-10496","resumo":"Depósitos 50k Mês - 02572017776","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10495","resumo":"Depósitos 50k Mês - 11415246602","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10494","resumo":"Depósitos 50k Mês - 04909254218","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10493","resumo":"Depósitos 50k Mês - 08678188677","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":"2026-03-18T17:28:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10492","resumo":"Depósitos 50k Mês - 12217444611","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10491","resumo":"Depósitos 50k Mês - 02224412754","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10490","resumo":"Depósitos 50k Mês - 12775796605","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-05T00:00:00"},{"id":"RP-10489","resumo":"Depósitos 50k Mês - 82036152791","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-05T00:00:00"},{"id":"RP-10488","resumo":"Depósitos 50k Mês - 01337985341","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-05T00:00:00"},{"id":"RP-10487","resumo":"Depósitos 50k Mês - 08862814909","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10486","resumo":"Depósitos 50k Mês - 11129041743","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":"2026-03-18T17:28:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-05T00:00:00"},{"id":"RP-10485","resumo":"Depósitos 50k Mês - 01836569114","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10484","resumo":"Depósitos 50k Mês - 09658398693","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":"2026-03-18T17:28:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-05T00:00:00"},{"id":"RP-10483","resumo":"Depósitos 50k Mês - 08658380629","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-05T00:00:00"},{"id":"RP-10482","resumo":"Depósitos 50k Mês - 12356570438","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-06T00:00:00"},{"id":"RP-10481","resumo":"Depósitos 50k Mês - 05875508485","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-05T00:00:00"}];
+// allCases = SAMPLE; // upload-first
+{const now=new Date(),ago=new Date(now);ago.setMonth(ago.getMonth()-3);filters.dateFrom=ago.toISOString().slice(0,10);filters.dateTo=now.toISOString().slice(0,10)}
+// renderAll(); // upload-first
+// ===== FIX: Stable text search (no focus loss) =====
+function attachSearchListener(){
+  const input = document.getElementById('textSearch');
+  if(!input || input.dataset.bound) return;
+  input.dataset.bound = 'true';
+  let t;
+  input.addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      filters.text = input.value;
+      tablePage = 0;
+      renderAll();
+    }, 150);
+  });
+}
+
+// ==================== FILTER ====================
+function applyFilters(cases,f){
+  return cases.filter(c=>{
+    if(f.tipo&&c.tipo!==f.tipo)return false;
+    if(f.risco&&c.risco!==f.risco)return false;
+    if(f.responsavel&&c.responsavel!==f.responsavel)return false;
+    if(f.status){const fs=f.status;if(fs==="open"||fs==="closed"||fs==="coaf"){if(getStatusCategory(c.status)!==fs)return false}else{if(c.status!==fs)return false}}
+    if(f.sla&&getSlaStatus(c)!==f.sla)return false;
+    if(f.dateFrom&&c.criado&&new Date(c.criado)<new Date(f.dateFrom))return false;
+    if(f.dateTo&&c.criado){const e=new Date(f.dateTo);e.setHours(23,59,59,999);if(new Date(c.criado)>e)return false}
+    if((f.dateFrom||f.dateTo)&&!c.criado)return false;
+    if(f.transFrom&&c.data_transacao_pld&&new Date(c.data_transacao_pld)<new Date(f.transFrom))return false;
+    if(f.transTo&&c.data_transacao_pld){const e=new Date(f.transTo);e.setHours(23,59,59,999);if(new Date(c.data_transacao_pld)>e)return false}
+    if((f.transFrom||f.transTo)&&!c.data_transacao_pld)return false;
+    if(f.text){const t=f.text.toLowerCase();if(!(c.id||"").toLowerCase().includes(t)&&!(c.resumo||"").toLowerCase().includes(t)&&!(c.responsavel||"").toLowerCase().includes(t)&&!(c.status||"").toLowerCase().includes(t)&&!(c.tipo||"").toLowerCase().includes(t))return false}
+    return true;
+  });
+}
+
+// ==================== RENDER ALL ====================
+function renderAll(){
+  const filtered=applyFilters(allCases,filters);
+  renderFilters();
+  renderKPIs(filtered);
+  renderCharts(filtered);
+  renderPersonPanel(filtered);
+  renderTable(filtered);
+  document.getElementById('filtersSection').style.display='flex';
+  document.getElementById('dateFilters').style.display='flex';
+  document.getElementById('personPanel').style.display='block';
+  document.getElementById('tablePanel').style.display='block';
+}
+
+// ==================== FILTERS RENDER ====================
+function renderFilters(){
+  const tipos=[...new Set(allCases.map(c=>c.tipo))].sort();
+  const resps=[...new Set(allCases.map(c=>c.responsavel).filter(Boolean))].sort();
+  const statuses=[...new Set(allCases.map(c=>c.status))].sort();
+  let h=`<input type="text" id="textSearch" class="filter-input" style="min-width:280px" placeholder="🔍 Buscar (ID, resumo, responsável, CPF...)" value="${filters.text}">`;
+  h+=`<select class="filter-select" onchange="filters.tipo=this.value;renderAll()"><option value="">Todos os tipos</option>${tipos.map(t=>`<option${filters.tipo===t?' selected':''}>${t}</option>`).join('')}</select>`;
+  h+=`<select class="filter-select" onchange="filters.risco=this.value;renderAll()"><option value="">Todos os riscos</option><option${filters.risco==='Alto'?' selected':''}>Alto</option><option${filters.risco==='Médio'?' selected':''}>Médio</option><option${filters.risco==='Baixo'?' selected':''}>Baixo</option></select>`;
+  h+=`<select class="filter-select" onchange="filters.responsavel=this.value;renderAll()"><option value="">Todos os responsáveis</option>${resps.map(r=>`<option${filters.responsavel===r?' selected':''}>${r}</option>`).join('')}</select>`;
+  h+=`<select class="filter-select" onchange="filters.status=this.value;renderAll()"><option value="">Todos os status</option><option value="open"${filters.status==='open'?' selected':''}>📂 Abertos</option><option value="closed"${filters.status==='closed'?' selected':''}>✅ Concluídos</option><option value="coaf"${filters.status==='coaf'?' selected':''}>📋 COAF</option>${statuses.map(s=>`<option value="${s}"${filters.status===s?' selected':''}>${s}</option>`).join('')}</select>`;
+  h+=`<select class="filter-select" onchange="filters.sla=this.value;renderAll()"><option value="">Todos os SLA</option><option value="breached"${filters.sla==='breached'?' selected':''}>⚠ Estourado</option><option value="warning"${filters.sla==='warning'?' selected':''}>⏳ Em Risco</option><option value="ok"${filters.sla==='ok'?' selected':''}>✓ No Prazo</option><option value="resolved"${filters.sla==='resolved'?' selected':''}>✅ Resolvido</option></select>`;
+  document.getElementById('filtersSection').innerHTML=h; attachSearchListener();
+
+  let d=`<span class="subtitle">Criação de:</span><input type="date" class="filter-input" style="width:140px" value="${filters.dateFrom}" onchange="filters.dateFrom=this.value;renderAll()"><span class="subtitle">até:</span><input type="date" class="filter-input" style="width:140px" value="${filters.dateTo}" onchange="filters.dateTo=this.value;renderAll()">`;
+  d+=`<span class="subtitle" style="margin-left:0.5rem">Trans. PLD de:</span><input type="date" class="filter-input" style="width:140px" value="${filters.transFrom}" onchange="filters.transFrom=this.value;renderAll()"><span class="subtitle">até:</span><input type="date" class="filter-input" style="width:140px" value="${filters.transTo}" onchange="filters.transTo=this.value;renderAll()">`;
+  if(filters.dateFrom||filters.dateTo)d+=`<a href="#" style="font-size:0.75rem;color:var(--primary)" onclick="event.preventDefault();filters.dateFrom='';filters.dateTo='';renderAll()">Remover filtro de data</a>`;
+  document.getElementById('dateFilters').innerHTML=d;
+}
+
+// ==================== KPI RENDER ====================
+function renderKPIs(cases){
+  const open=cases.filter(c=>isOpen(c.status)).length;
+  const closed=cases.filter(c=>!isOpen(c.status)&&!isCoaf(c.status)).length;
+  const coaf=cases.filter(c=>isCoaf(c.status)).length;
+  const breached=cases.filter(c=>getSlaStatus(c)==="breached").length;
+  const high=cases.filter(c=>c.risco==="Alto").length;
+  const resolved=cases.filter(c=>c.criado&&c.resolvido);
+  const avg=resolved.length?Math.round(resolved.reduce((s,c)=>s+(new Date(c.resolvido).getTime()-new Date(c.criado).getTime())/864e5,0)/resolved.length):0;
+  const kpis=[
+    {v:fmtNum(cases.length),l:"Total de Casos",color:"var(--foreground)"},
+    {v:fmtNum(open),l:"Abertos",color:"var(--status-open)"},
+    {v:fmtNum(closed),l:"Concluídos",color:"var(--status-done)"},
+    {v:fmtNum(coaf),l:"COAF",color:"var(--coaf)"},
+    {v:fmtNum(breached),l:"SLA Estourado",color:"var(--risk-high)"},
+    {v:fmtNum(high),l:"Risco Alto",color:"var(--risk-high)"},
+    {v:avg+"d",l:"Tempo Médio Resolução",color:"var(--foreground)"},
+  ];
+  document.getElementById('kpiGrid').innerHTML=kpis.map(k=>`<div class="kpi-card"><div class="kpi-value" style="color:${k.color}">${k.v}</div><div class="kpi-label">${k.l}</div></div>`).join('');
+}
+
+// ==================== CHARTS ====================
+function destroyCharts(){chartInstances.forEach(c=>c.destroy());chartInstances=[]}
+function makeChart(canvasId,config){
+  const ctx=document.getElementById(canvasId);
+  if(!ctx)return;
+  const chart=new Chart(ctx,config);
+  chartInstances.push(chart);
+  return chart;
+}
+
+function renderCharts(cases){
+  destroyCharts();
+  // Data prep
+  const tipoCount={};cases.forEach(c=>tipoCount[c.tipo]=(tipoCount[c.tipo]||0)+1);
+  const riscoCount={};cases.forEach(c=>riscoCount[c.risco]=(riscoCount[c.risco]||0)+1);
+  const timeline=getTimeline(cases);
+  const workload={};cases.filter(c=>c.responsavel&&isOpen(c.status)).forEach(c=>workload[c.responsavel]=(workload[c.responsavel]||0)+1);
+  const wlSorted=Object.entries(workload).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  let breached=0,warning=0,ok=0;cases.filter(c=>isOpen(c.status)||isCoaf(c.status)).forEach(c=>{const s=getSlaStatus(c);if(s==='breached')breached++;else if(s==='warning')warning++;else ok++});
+  const statusD={open:cases.filter(c=>isOpen(c.status)).length,coaf:cases.filter(c=>isCoaf(c.status)).length,closed:cases.filter(c=>!isOpen(c.status)&&!isCoaf(c.status)).length};
+  const resTrend=getResTrend(cases);
+
+  const grid=document.getElementById('chartsGrid');
+  grid.innerHTML=`
+    <div class="chart-card"><h3 class="chart-title">Casos por Tipo</h3><canvas id="chTipo" height="80"></canvas></div>
+    <div class="chart-card"><h3 class="chart-title">Distribuição de Risco</h3><canvas id="chRisco" height="80"></canvas></div>
+    <div class="chart-card span-2"><h3 class="chart-title">Evolução Mensal de Casos</h3><canvas id="chTimeline" height="80"></canvas></div>
+    <div class="chart-card"><h3 class="chart-title">Carga de Trabalho (Casos Abertos)</h3><canvas id="chWorkload" height="80"></canvas></div>
+    <div class="chart-card"><h3 class="chart-title">Visão SLA — Casos Abertos</h3><canvas id="chSla" height="80"></canvas></div>
+    <div class="chart-card"><h3 class="chart-title">Distribuição por Status</h3><canvas id="chStatus" height="80"></canvas></div>
+    <div class="chart-card"><h3 class="chart-title">Tempo Médio de Resolução (dias)</h3><canvas id="chRes" height="80"></canvas></div>
+  `;
+
+  const tipoLabels=Object.keys(tipoCount);
+  makeChart('chTipo',{type:'bar',data:{labels:tipoLabels,datasets:[{data:tipoLabels.map(t=>tipoCount[t]),backgroundColor:tipoLabels.map(t=>TIPO_COLORS[t]||'#94a3b8')}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:11}}},y:{ticks:{font:{size:10}}}}}});
+
+  const rLabels=Object.keys(riscoCount);
+  makeChart('chRisco',{type:'bar',data:{labels:rLabels,datasets:[{data:rLabels.map(r=>riscoCount[r]),backgroundColor:rLabels.map(r=>RISCO_COLORS[r]||'#94a3b8')}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}});
+
+  makeChart('chTimeline',{type:'line',data:{labels:timeline.map(t=>t.month),datasets:[{label:'Criados',data:timeline.map(t=>t.criados),borderColor:'hsl(217,91%,60%)',backgroundColor:'hsla(217,91%,60%,0.15)',fill:true,tension:0.3},{label:'Resolvidos',data:timeline.map(t=>t.resolvidos),borderColor:'hsl(142,71%,35%)',backgroundColor:'hsla(142,71%,35%,0.15)',fill:true,tension:0.3},{label:'COAF',data:timeline.map(t=>t.coaf),borderColor:'hsl(263,70%,50%)',backgroundColor:'hsla(263,70%,50%,0.15)',fill:true,tension:0.3}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
+
+  makeChart('chWorkload',{type:'bar',data:{labels:wlSorted.map(w=>w[0].split(' ').slice(0,2).join(' ')),datasets:[{data:wlSorted.map(w=>w[1]),backgroundColor:'hsl(215,50%,23%)'}]},options:{plugins:{legend:{display:false},datalabels:{display:true}},scales:{x:{ticks:{font:{size:9},maxRotation:20}},y:{ticks:{font:{size:11}}}}}});
+
+  makeChart('chSla',{type:'bar',data:{labels:['Estourado','Em Risco','No Prazo'],datasets:[{data:[breached,warning,ok],backgroundColor:['hsl(0,72%,51%)','hsl(38,92%,50%)','hsl(142,71%,35%)']}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}});
+
+  makeChart('chStatus',{type:'bar',data:{labels:['Abertos','COAF','Concluídos'],datasets:[{data:[statusD.open,statusD.coaf,statusD.closed],backgroundColor:['hsl(217,91%,60%)','hsl(263,70%,50%)','hsl(142,71%,35%)']}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}});
+
+  makeChart('chRes',{type:'line',data:{labels:resTrend.map(r=>r.month),datasets:[{label:'Dias',data:resTrend.map(r=>r.avg),borderColor:'hsl(263,70%,50%)',backgroundColor:'hsl(263,70%,50%)',pointRadius:3,tension:0.3}]},options:{plugins:{legend:{display:false},datalabels:{display:true}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
+}
+
+function getTimeline(cases){
+  const m=new Map();
+  cases.forEach(c=>{
+    if(c.criado){const d=new Date(c.criado);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const e=m.get(k)||{criados:0,resolvidos:0,coaf:0};e.criados++;m.set(k,e)}
+    if(c.resolvido){const d=new Date(c.resolvido);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const e=m.get(k)||{criados:0,resolvidos:0,coaf:0};e.resolvidos++;m.set(k,e)}
+    if(isCoaf(c.status)&&c.atualizado){const d=new Date(c.atualizado);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const e=m.get(k)||{criados:0,resolvidos:0,coaf:0};e.coaf++;m.set(k,e)}
+  });
+  return[...m.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([month,d])=>({month,...d}));
+}
+function getResTrend(cases){
+  const resolved=cases.filter(c=>c.criado&&c.resolvido);const m=new Map();
+  resolved.forEach(c=>{const d=new Date(c.resolvido);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const arr=m.get(k)||[];arr.push(Math.round((new Date(c.resolvido)-new Date(c.criado))/864e5));m.set(k,arr)});
+  return[...m.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([month,days])=>({month,avg:Math.round(days.reduce((s,d)=>s+d,0)/days.length)}));
+}
+
+// ==================== PERSON PANEL ====================
+function renderPersonPanel(cases){
+  const panel=document.getElementById('personPanel');
+  const corr=buildPersonCorrelations(cases);
+  let filtered=corr;
+  if(personSearch){const s=personSearch.toLowerCase();filtered=filtered.filter(p=>p.identifier.includes(s))}
+  filtered.sort((a,b)=>b[personSortBy]-a[personSortBy]);
+  const reincidentes=filtered.filter(p=>p.totalCases>=2);
+  const totalWithCoaf=filtered.filter(p=>p.coafCases>0).length;
+  const totalRecent=filtered.filter(p=>p.coafInLast6Months).length;
+  const showList=reincidentes.length>0?reincidentes:filtered;
+
+  let h=`<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.75rem;margin-bottom:1rem">
+    <div><h3 class="chart-title" style="margin-bottom:0">Correlação por CPF / Pessoa</h3>
+    <p class="subtitle" style="margin-top:0.25rem">${corr.length} pessoas · ${reincidentes.length} reincidentes · ${totalWithCoaf} com COAF · ${totalRecent} COAF &lt;6 meses</p></div>
+    <div style="display:flex;gap:0.5rem">
+      <input type="text" class="filter-input" style="width:180px" placeholder="Buscar CPF..." value="${personSearch}" oninput="personSearch=this.value;renderAll()">
+      <select class="filter-select" onchange="personSortBy=this.value;renderAll()"><option value="totalCases"${personSortBy==='totalCases'?' selected':''}>Total</option><option value="openCases"${personSortBy==='openCases'?' selected':''}>Abertos</option><option value="coafCases"${personSortBy==='coafCases'?' selected':''}>COAF</option></select>
+    </div></div>`;
+  h+=`<div class="person-summary"><div class="mini-kpi"><div class="val">${corr.length}</div><div class="lbl">Pessoas</div></div><div class="mini-kpi"><div class="val" style="color:var(--risk-high)">${reincidentes.length}</div><div class="lbl">Reincidentes</div></div><div class="mini-kpi"><div class="val" style="color:var(--coaf)">${totalWithCoaf}</div><div class="lbl">Com COAF</div></div><div class="mini-kpi"><div class="val" style="color:var(--risk-med)">${totalRecent}</div><div class="lbl">COAF &lt;6m</div></div></div>`;
+  h+=`<div class="table-wrap" style="max-height:500px;overflow-y:auto"><table class="data-table"><thead style="position:sticky;top:0;background:var(--card);z-index:5"><tr><th>CPF/Email</th><th>Total</th><th>Abertos</th><th>Encerrados</th><th>COAF</th><th>Último COAF</th><th>COAF &lt;6m</th><th>Risco</th><th>Primeiro Caso</th><th>Último Caso</th></tr></thead><tbody>`;
+  showList.slice(0,100).forEach(p=>{
+    const rClass=p.riskLevel==='Alto'?'badge-risk-high':p.riskLevel==='Médio'?'badge-risk-med':'badge-risk-low';
+    const displayId=p.type==='cpf'?formatCPF(p.identifier):p.identifier;
+    h+=`<tr style="cursor:pointer" onclick="expandedPerson=expandedPerson==='${p.identifier}'?null:'${p.identifier}';renderAll()">
+      <td class="mono-id">${displayId}</td><td style="font-weight:700">${p.totalCases}</td>
+      <td><span class="badge badge-status-open">${p.openCases}</span></td>
+      <td><span class="badge badge-status-done">${p.closedCases}</span></td>
+      <td>${p.coafCases>0?`<span class="badge badge-coaf">${p.coafCases}</span>`:'—'}</td>
+      <td>${fmtDate(p.lastCoafDate)}</td>
+      <td>${p.coafCases>0?(p.coafInLast6Months?'<span class="badge badge-risk-high">⚠ Sim</span>':'<span class="badge badge-risk-low">Não</span>'):'—'}</td>
+      <td><span class="badge ${rClass}">${p.riskLevel}</span></td>
+      <td>${fmtDate(p.firstCaseDate)}</td><td>${fmtDate(p.lastCaseDate)}</td></tr>`;
+    if(expandedPerson===p.identifier){
+      h+=`<tr><td colspan="10" style="padding:0"><div class="expanded-cases"><p style="font-size:0.75rem;font-weight:600;margin-bottom:0.5rem">Casos vinculados:</p>`;
+      p.cases.forEach(c=>{
+        const rc=c.risco==='Alto'?'badge-risk-high':c.risco==='Médio'?'badge-risk-med':'badge-risk-low';
+        h+=`<div style="display:flex;align-items:center;gap:0.75rem;font-size:0.75rem;margin-bottom:2px"><a href="${JIRA_BASE_URL}${c.id}" target="_blank" class="mono-id" style="font-size:11px">${c.id}</a><span style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.resumo}">${c.resumo}</span><span class="badge ${rc}">${c.risco}</span><span style="color:var(--muted-fg)">${c.status}</span><span style="color:var(--muted-fg)">${fmtDate(c.criado)}</span></div>`;
+      });
+      h+=`</div></td></tr>`;
+    }
+  });
+  h+=`</tbody></table></div>`;
+  if(reincidentes.length===0&&filtered.length>0)h+=`<p style="font-size:0.75rem;color:var(--muted-fg);margin-top:0.75rem;text-align:center">Nenhum reincidente encontrado. Mostrando todos os ${filtered.length} registros.</p>`;
+  panel.innerHTML=h;
+}
+
+// ==================== TABLE ====================
+function renderTable(cases){
+  const panel=document.getElementById('tablePanel');
+  const RISCO_ORDER={Alto:3,Médio:2,Baixo:1};const SLA_ORDER={breached:4,warning:3,ok:2,resolved:1};
+  const sorted=[...cases].sort((a,b)=>{
+    let cmp=0;
+    switch(tableSortField){
+      case 'criado':case 'resolvido':case 'data_transacao_pld':{const da=a[tableSortField]?new Date(a[tableSortField]).getTime():0;const db=b[tableSortField]?new Date(b[tableSortField]).getTime():0;cmp=da-db;break}
+      case 'sla':{const sa=SLA_ORDER[getSlaStatus(a)]||0;const sb=SLA_ORDER[getSlaStatus(b)]||0;cmp=sa-sb;if(cmp===0)cmp=(getSlaElapsed(a)||0)-(getSlaElapsed(b)||0);break}
+      case 'risco':cmp=(RISCO_ORDER[a.risco]||0)-(RISCO_ORDER[b.risco]||0);break;
+      default:cmp=String(a[tableSortField]||"").localeCompare(String(b[tableSortField]||""),"pt-BR");
+    }
+    return tableSortDir==='desc'?-cmp:cmp;
+  });
+
+  const totalPages=Math.ceil(sorted.length/PAGE_SIZE);
+  const safePage=Math.min(tablePage,Math.max(0,totalPages-1));
+  const pageData=sorted.slice(safePage*PAGE_SIZE,(safePage+1)*PAGE_SIZE);
+
+  const cols=[{f:'id',l:'ID'},{f:'tipo',l:'Tipo'},{f:'resumo',l:'Resumo'},{f:'status',l:'Status'},{f:'responsavel',l:'Responsável'},{f:'risco',l:'Risco'},{f:'sla',l:'SLA'},{f:'data_transacao_pld',l:'Data Trans. PLD'},{f:'criado',l:'Criado'},{f:'resolvido',l:'Resolvido'}];
+  const arrow=f=>tableSortField===f?(tableSortDir==='desc'?'▼':'▲'):'⇅';
+
+  let h=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem"><h3 class="chart-title" style="margin-bottom:0">Tabela Detalhada (${fmtNum(cases.length)} casos)</h3><div class="pagination">Pág. ${safePage+1} de ${totalPages} <button onclick="tablePage=Math.max(0,tablePage-1);renderAll()" ${safePage===0?'disabled':''}>‹</button><button onclick="tablePage=Math.min(${totalPages-1},tablePage+1);renderAll()" ${safePage>=totalPages-1?'disabled':''}>›</button></div></div>`;
+  h+=`<div class="table-wrap"><table class="data-table"><thead><tr>`;
+  cols.forEach(c=>{h+=`<th onclick="if(tableSortField==='${c.f}')tableSortDir=tableSortDir==='asc'?'desc':'asc';else{tableSortField='${c.f}';tableSortDir='desc'}tablePage=0;renderAll()">${c.l} <span style="opacity:0.5;font-size:10px">${arrow(c.f)}</span></th>`});
+  h+=`</tr></thead><tbody>`;
+
+  pageData.forEach(c=>{
+    const sla=getSlaStatus(c);const el=getSlaElapsed(c);const lim=getSlaDays(c.tipo);
+    const rBadge=c.risco==='Alto'?'badge-risk-high':c.risco==='Médio'?'badge-risk-med':'badge-risk-low';
+    const sBadge=isCoaf(c.status)?'badge-coaf':isOpen(c.status)?'badge-status-open':'badge-status-done';
+    let slaBadge;
+    if(sla==='resolved')slaBadge='<span class="badge badge-status-done">Concluído</span>';
+    else if(sla==='breached')slaBadge=`<span class="badge badge-risk-high">⚠ ${el}/${lim}d</span>`;
+    else if(sla==='warning')slaBadge=`<span class="badge badge-risk-med">⏳ ${el}/${lim}d</span>`;
+    else slaBadge=`<span class="badge badge-risk-low">✓ ${el!==null?el+'/'+lim+'d':'—'}</span>`;
+
+    h+=`<tr><td class="mono-id"><a href="${JIRA_BASE_URL}${c.id}" target="_blank">${c.id}</a></td><td>${c.tipo}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${(c.resumo||'').replace(/"/g,'&quot;')}">${c.resumo}</td><td><span class="badge ${sBadge}">${c.status}</span></td><td>${c.responsavel||'—'}</td><td><span class="badge ${rBadge}">${c.risco}</span></td><td>${slaBadge}</td><td>${fmtDate(c.data_transacao_pld)}</td><td>${fmtDate(c.criado)}</td><td>${fmtDate(c.resolvido)}</td></tr>`;
+  });
+  h+=`</tbody></table></div>`;
+  panel.innerHTML=h;
+}
+</script>
+</body>
+</html>
