@@ -149,13 +149,34 @@ function fmtDate(d){if(!d)return"—";const dt=new Date(d);if(isNaN(dt))return"�
 function fmtNum(n){return n.toLocaleString("pt-BR")}
 
 // ==================== PARSER ====================
-function parseDate(value){
-  if(!value)return null;
-  if(typeof value==='number'){const d=XLSX.SSF.parse_date_code(value);if(d)return new Date(d.y,d.m-1,d.d,d.H||0,d.M||0,d.S||0).toISOString()}
-  const str=String(value).trim();if(!str)return null;
-  const br=str.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-  if(br){const dt=new Date(br[3]+'-'+br[2]+'-'+br[1]);if(!isNaN(dt))return dt.toISOString()}
-  const dt=new Date(str);return isNaN(dt)?null:dt.toISOString();
+function parseDate(value) {
+  if (!value) return null;
+
+  // Caso 1: data do Excel (número)
+  if (typeof value === 'number') {
+    const d = XLSX.SSF.parse_date_code(value);
+    if (!d) return null;
+    return new Date(d.y, d.m - 1, d.d).toISOString();
+  }
+
+  const str = String(value).trim();
+  if (!str) return null;
+
+  // Caso 2: formato brasileiro dd/MM/yyyy
+  const br = str.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (br) {
+    return new Date(`${br[3]}-${br[2]}-${br[1]}`).toISOString();
+  }
+
+  // Caso 3: ISO 8601 (yyyy-MM-dd ou yyyy-MM-ddTHH:mm:ss)
+  const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) {
+    return new Date(str).toISOString();
+  }
+
+  // Fallback
+  const d = new Date(str);
+  return isNaN(d) ? null : d.toISOString();
 }
 function normTipo(raw){
   const s=raw.trim();
