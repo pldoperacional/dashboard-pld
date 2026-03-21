@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -15,14 +16,24 @@
   --primary: hsl(215,50%,23%); --primary-fg: hsl(210,40%,98%);
   --muted: hsl(215,20%,92%); --muted-fg: hsl(215,15%,47%);
   --border: hsl(215,25%,90%);
-  --risk-high: hsl(0,72%,51%); --risk-high-bg: hsl(0,100%,97%);
-  --risk-med: hsl(38,92%,50%); --risk-med-bg: hsl(48,96%,97%);
-  --risk-low: hsl(142,71%,35%); --risk-low-bg: hsl(142,76%,97%);
-  --coaf: hsl(263,70%,50%); --coaf-bg: hsl(263,100%,98%);
-  --status-open: hsl(217,91%,60%); --status-open-bg: hsl(217,100%,97%);
-  --status-done: hsl(142,71%,35%); --status-done-bg: hsl(142,76%,97%);
+  --risk-high: hsl(0,78%,47%); --risk-high-bg: hsl(0,100%,90%);
+  --risk-med: hsl(38,95%,50%); --risk-med-bg: hsl(48,100%,90%);
+  --risk-low: hsl(142,65%,36%); --risk-low-bg: hsl(142,76%,90%);
+  --coaf: hsl(263,72%,56%); --coaf-bg: hsl(263,100%,90%);
+  --status-open: hsl(217,92%,58%); --status-open-bg: hsl(217,100%,90%);
+  --status-done: hsl(142,60%,38%); --status-done-bg: hsl(142,76%,90%);
+  --sla-warning: hsl(38,95%,50%);
+  --sla-critical: hsl(0,78%,47%);
   --radius: 0.75rem;
-}
+
+  --link-color: hsl(215, 80%, 44%);
+  --link-hover: hsl(215, 85%, 38%);
+
+  --btn-clear-all-bg: hsl(215, 85%, 94%);
+  --btn-clear-all-fg: hsl(215, 50%, 28%);
+  --btn-clear-dates-bg: hsl(26, 100%, 94%);
+  --btn-clear-dates-fg: hsl(26, 70%, 30%);
+  --btn-hover-shadow: 0 1px 2px rgba(0,0,0,.05);}
 body{font-family:'Inter',sans-serif;background:var(--background);color:var(--foreground);-webkit-font-smoothing:antialiased}
 .container{max-width:1400px;margin:0 auto;padding:0 1rem}
 header{background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
@@ -33,17 +44,27 @@ main{padding:1.5rem 0}main>*+*{margin-top:1.5rem}
 
 /* Upload */
 .upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:2rem;text-align:center;cursor:pointer;transition:all .2s}
-.upload-zone:hover{border-color:var(--primary);background:hsla(215,50%,23%,0.05)}
+.upload-zone:hover{border-color:var(--link-color);background:hsla(215,50%,23%,0.05)}
 
 /* Filters */
 .filters{display:flex;gap:0.75rem;flex-wrap:wrap}
 .filter-select,.filter-input{height:36px;border:1px solid var(--border);border-radius:8px;padding:0 0.75rem;font-size:0.75rem;background:var(--card);outline:none}
-.filter-select:focus,.filter-input:focus{border-color:var(--primary)}
+.filter-select:focus,.filter-input:focus{border-color:var(--link-color)}
 
 /* KPIs */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem}
-.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem;text-align:center;transition:box-shadow .2s}
-.kpi-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+.kpi-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:0.4rem;
+  text-align:center;
+  transition:transform .18s ease, box-shadow .18s ease;
+  will-change:transform;
+}
+.kpi-card:hover, .kpi-card:focus-within{
+  transform:translateY(-2px) scale(1.02);
+}
 .kpi-value{font-size:1.875rem;font-weight:800;letter-spacing:-0.025em}
 .kpi-label{font-size:0.75rem;color:var(--muted-fg);margin-top:0.25rem;font-weight:500}
 
@@ -55,8 +76,27 @@ main{padding:1.5rem 0}main>*+*{margin-top:1.5rem}
 @media(max-width:768px){.chart-card.span-2{grid-column:span 1}}
 .chart-title{font-size:0.875rem;font-weight:600;margin-bottom:1rem}
 
+/* SLA Alert Panel */
+.sla-alerts-panel{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1rem}
+.sla-alert-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem;overflow:hidden}
+.sla-alert-title{font-size:0.875rem;font-weight:700;margin-bottom:0.75rem;padding-bottom:0.5rem;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:0.5rem}
+.sla-alert-title svg{width:18px;height:18px;stroke-width:1.8}
+.sla-alert-list{max-height:300px;overflow-y:auto;font-size:0.75rem}
+.sla-alert-item{padding:0.5rem;border-bottom:1px solid var(--muted);display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap}
+.sla-alert-item:hover{background:var(--muted);border-radius:6px}
+.sla-critical{background:hsla(0,78%,47%,0.1);border-left:3px solid var(--risk-high)}
+.sla-warning{background:hsla(38,95%,50%,0.1);border-left:3px solid var(--risk-med)}
+.empty-message{text-align:center;color:var(--muted-fg);padding:1rem;font-style:italic}
+.badge-sla-days{font-size:0.65rem;padding:2px 6px;border-radius:12px;background:var(--muted);color:var(--muted-fg);cursor:help}
+.badge-sla-critical{background:var(--risk-high);color:white}
+.badge-sla-warning{background:var(--risk-med);color:white}
+
+@media (max-width: 768px){
+  .sla-alerts-panel{grid-template-columns:1fr}
+}
+
 /* Badges */
-.badge{display:inline-flex;align-items:center;padding:2px 10px;border-radius:9999px;font-size:0.75rem;font-weight:600}
+.badge{display:inline-flex;align-items:center;padding:2px 10px;border-radius:9999px;font-size:0.75rem;font-weight:600;cursor:help}
 .badge-risk-high{background:var(--risk-high-bg);color:var(--risk-high)}
 .badge-risk-med{background:var(--risk-med-bg);color:var(--risk-med)}
 .badge-risk-low{background:var(--risk-low-bg);color:var(--risk-low)}
@@ -65,20 +105,25 @@ main{padding:1.5rem 0}main>*+*{margin-top:1.5rem}
 .badge-status-done{background:var(--status-done-bg);color:var(--status-done)}
 
 /* Table */
-.table-wrap{overflow-x:auto}
-table.data-table{width:100%;font-size:0.75rem;border-collapse:collapse}
+.table-wrap{overflow-x:auto;overflow-y:visible}
+table.data-table{width:100%;font-size:0.75rem;border-collapse:collapse;table-layout:auto}
 .data-table th{text-align:left;padding:0.625rem 0.75rem;color:var(--muted-fg);font-weight:500;border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap;user-select:none}
 .data-table th:hover{color:var(--foreground)}
-.data-table td{padding:0.5rem 0.75rem;border-bottom:1px solid var(--muted);white-space:nowrap}
+.data-table td{padding:0.5rem 0.75rem;border-bottom:1px solid var(--muted);white-space:normal;word-break:break-word}
 .data-table tr:hover td{background:hsla(215,20%,92%,0.5)}
-.mono-id{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--primary)}
+.mono-id{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--link-color);white-space:nowrap}
 
-/* Pagination */
+@media (max-width: 1200px) {
+  .data-table th, .data-table td {padding: 0.5rem 0.5rem;font-size: 0.7rem;}
+}
+@media (max-width: 768px) {
+  .data-table th, .data-table td {padding: 0.4rem 0.4rem;font-size: 0.65rem;}
+}
+
 .pagination{display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--muted-fg)}
 .pagination button{border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:0.75rem;background:var(--card);cursor:pointer}
 .pagination button:disabled{opacity:0.3;cursor:default}
 
-/* Person panel */
 .person-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:0.75rem;margin-bottom:1rem}
 .mini-kpi{border:1px solid var(--border);border-radius:8px;padding:0.75rem;text-align:center}
 .mini-kpi .val{font-size:1.125rem;font-weight:700}
@@ -86,95 +131,412 @@ table.data-table{width:100%;font-size:0.75rem;border-collapse:collapse}
 .expanded-cases{background:hsla(215,20%,92%,0.3);padding:0.75rem;margin:0 0.5rem 0.5rem;border-radius:8px}
 
 footer{border-top:1px solid var(--border);padding:1rem 0 2rem;text-align:center;font-size:0.75rem;color:var(--muted-fg)}
+
+[data-theme='dark'] {
+  --background: hsl(220,15%,12%);
+  --foreground: hsl(220,15%,92%);
+  --card: hsl(220,15%,16%);
+  --card-fg: hsl(220,15%,92%);
+  --muted: hsl(220,10%,22%);
+  --muted-fg: hsl(220,10%,70%);
+  --border: hsl(220,10%,28%);
+  --link-color: hsl(215, 85%, 72%);
+  --link-hover: hsl(215, 90%, 78%);
+  --btn-clear-all-bg: hsl(215, 25%, 22%);
+  --btn-clear-all-fg: hsl(215, 80%, 85%);
+  --btn-clear-dates-bg: hsl(26, 35%, 24%);
+  --btn-clear-dates-fg: hsl(26, 85%, 85%);
+  --btn-hover-shadow: 0 1px 2px rgba(0,0,0,.35);}
+[data-theme='dark'] .expanded-cases { background: var(--card); }
+
+.btn-mono{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--muted-fg);cursor:pointer}
+.btn-mono:hover{color:var(--foreground)}
+
+[data-theme='dark'] body {background: var(--background);color: var(--foreground);}
+[data-theme='dark'] h1,[data-theme='dark'] h2,[data-theme='dark'] h3,[data-theme='dark'] h4,[data-theme='dark'] .chart-title {color: var(--foreground);}
+[data-theme='dark'] .kpi-value {color: var(--foreground);}
+[data-theme='dark'] .kpi-label,[data-theme='dark'] .subtitle {color: var(--muted-fg);}
+[data-theme='dark'] table.data-table td {color: var(--foreground);}
+[data-theme='dark'] table.data-table th {color: var(--muted-fg);}
+[data-theme='dark'] .filter-input,[data-theme='dark'] .filter-select {color: var(--foreground);background: var(--card);}
+[data-theme='dark'] .badge {color: var(--foreground) !important;border-color: var(--muted-fg);}
+[data-theme='dark'] .badge-risk-high { color: var(--risk-high) !important; }
+[data-theme='dark'] .badge-risk-med  { color: var(--risk-med) !important; }
+[data-theme='dark'] .badge-risk-low  { color: var(--risk-low) !important; }
+[data-theme='dark'] .badge-coaf      { color: var(--coaf) !important; }
+[data-theme='dark'] .badge-status-open { color: var(--status-open) !important; }
+[data-theme='dark'] .badge-status-done { color: var(--status-done) !important; }
+
+a, a:visited {color: var(--link-color);}
+a:hover {color: var(--link-hover);}
+.data-table a {color: var(--link-color);}
+
+#btnClearFilters, #btnClearDates {height:36px; padding:0 0.75rem; border-radius:8px; font-size:0.75rem;border:1px solid var(--border); cursor:pointer;}
+#btnClearFilters {background: var(--btn-clear-all-bg); color: var(--btn-clear-all-fg);}
+#btnClearDates {background: var(--btn-clear-dates-bg); color: var(--btn-clear-dates-fg);}
+#btnClearFilters:hover, #btnClearDates:hover {box-shadow: var(--btn-hover-shadow); filter: brightness(0.98);}
+
+.badge { border-width: 1px; border-style: solid; }
+.badge-risk-high { border-color: color-mix(in oklab, var(--risk-high) 45%, transparent); }
+.badge-risk-med  { border-color: color-mix(in oklab, var(--risk-med) 45%, transparent); }
+.badge-risk-low  { border-color: color-mix(in oklab, var(--risk-low) 45%, transparent); }
+.badge-coaf      { border-color: color-mix(in oklab, var(--coaf) 45%, transparent); }
+.badge-status-open { border-color: color-mix(in oklab, var(--status-open) 45%, transparent); }
+.badge-status-done { border-color: color-mix(in oklab, var(--status-done) 45%, transparent); }
+
+[data-theme='dark'] .badge-risk-high { background: hsla(0, 100%, 60%, 0.22); }
+[data-theme='dark'] .badge-risk-med  { background: hsla(48,100%, 55%, 0.22); }
+[data-theme='dark'] .badge-risk-low  { background: hsla(142,70%, 45%, 0.22); }
+[data-theme='dark'] .badge-coaf      { background: hsla(263,85%, 65%, 0.22); }
+[data-theme='dark'] .badge-status-open { background: hsla(217,85%, 62%, 0.22); }
+[data-theme='dark'] .badge-status-done { background: hsla(142,70%, 45%, 0.22); }
+
+.badge{ border: none !important; transition: box-shadow .18s ease, text-shadow .18s ease; }
+.badge:hover{ text-shadow: 0 0 6px currentColor, 0 0 14px currentColor; box-shadow: 0 0 18px color-mix(in oklab, currentColor 35%, transparent); }
+[data-theme='dark'] .badge-risk-high   { color: color-mix(in oklab, var(--risk-high) 70%,  white 30%) !important; }
+[data-theme='dark'] .badge-risk-med    { color: color-mix(in oklab, var(--risk-med) 70%,   white 30%) !important; }
+[data-theme='dark'] .badge-risk-low    { color: color-mix(in oklab, var(--risk-low) 70%,   white 30%) !important; }
+[data-theme='dark'] .badge-coaf        { color: color-mix(in oklab, var(--coaf) 70%,       white 30%) !important; }
+[data-theme='dark'] .badge-status-open { color: color-mix(in oklab, var(--status-open) 70%,white 30%) !important; }
+[data-theme='dark'] .badge-status-done { color: color-mix(in oklab, var(--status-done) 70%,white 30%) !important; }
+
+[data-theme='dark'] .data-table tr:hover td{background: hsla(220, 10%, 22%, 0.55);}
+
+/* ===== SCROLLBAR STYLES - DARK MODE ===== */
+[data-theme='dark'] ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+[data-theme='dark'] ::-webkit-scrollbar-track {
+  background: var(--muted);
+  border-radius: 6px;
+}
+[data-theme='dark'] ::-webkit-scrollbar-thumb {
+  background: var(--muted-fg);
+  border-radius: 6px;
+}
+[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
+  background: var(--link-color);
+}
+[data-theme='dark'] * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted-fg) var(--muted);
+}
+
+/* Estilo para a linha expandida */
+.expanded-row td {
+  background-color: var(--muted) !important;
+  border-bottom: 1px solid var(--border);
+}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 </head>
 <body>
 
 <header>
 <div class="container header-inner">
   <div style="display:flex;align-items:center;gap:0.75rem">
-    <div class="logo"><svg width="18" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+    <div class="logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+    </div>
     <div><h1>Dashboard PLD & FinCrime</h1><p class="subtitle">Riscos & Compliance — Monitoramento Operacional</p></div>
   </div>
-  <span class="subtitle" id="dateDisplay"></span>
+  
+<input type="text" id="globalSearch" class="filter-input" style="min-width:260px" placeholder="Buscar geral...">
+<button id="themeToggle" class="filter-input" style="cursor:pointer;min-width:110px">🌙 Dark mode</button>
+
+<span class="subtitle" id="dateDisplay"></span>
 </div>
 </header>
 
 <main class="container">
-  <!-- Upload -->
   <div class="upload-zone" id="uploadZone" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
-    <svg width="28" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin:0 auto 0.75rem;display:block;color:var(--muted-fg)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin:0 auto 0.75rem;display:block;color:var(--muted-fg)">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="17 8 12 3 7 8"/>
+      <line x1="12" y1="3" x2="12" y2="15"/>
+    </svg>
     <p style="font-size:0.875rem;font-weight:600">Carregar planilha</p>
     <p style="font-size:0.75rem;color:var(--muted-fg);margin-top:0.25rem">Arraste ou clique para atualizar (formato .xlsx do Jira)</p>
     <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none">
   </div>
 
-  <!-- Filters -->
   <div id="filtersSection" class="filters" style="display:none"></div>
   <div id="dateFilters" class="filters" style="display:none;margin-top:0.75rem"></div>
 
-  <!-- KPIs -->
+  <div id="slaAlertsPanel" class="sla-alerts-panel" style="display:none"></div>
+
   <div id="kpiGrid" class="kpi-grid"></div>
-
-  <!-- Charts -->
   <div id="chartsGrid" class="charts-grid"></div>
-
-  <!-- Person Correlation -->
   <div id="personPanel" class="chart-card" style="display:none"></div>
-
-  <!-- Table -->
   <div id="tablePanel" class="chart-card" style="display:none"></div>
 
-  <footer>Dashboard de Compliance — Dados extraídos do Jira (RSC) — Uso interno</footer>
+  <footer>Desenvolvido por Leandro Ferreira (2026) — Uso interno</footer>
 </main>
 
 <script>
 // ==================== TYPES & CONSTANTS ====================
 const OPEN_STATUSES = ["Novo","Work in progress","Em Análise","Aguardando Retorno Diligências","Em Espera","Pendente","Comitê","Preparação","Aprovação","Aprovação Gestão Compliance"];
 const COAF_STATUSES = ["Comunicação COAF","Comunicado"];
-const TIPO_COLORS = {"Alerta PLD":"hsl(215,60%,45%)","KYP / Background Check":"hsl(38,85%,47%)","KYP / Monitoramento":"hsl(38,70%,45%)","Manipulação de Resultados":"hsl(330,81%,45%)","Jogo Responsável":"hsl(142,71%,35%)","Compliance":"hsl(263,70%,50%)"};
-const RISCO_COLORS = {"Alto":"hsl(0,72%,51%)","Médio":"hsl(38,92%,50%)","Baixo":"hsl(142,71%,35%)"};
+const TIPO_COLORS = {
+  'Alerta PLD':'hsl(215,35%,62%)',
+  'KYP / Background Check':'hsl(38,45%,62%)',
+  'KYP / Monitoramento':'hsl(38,40%,58%)',
+  'Manipulação de Resultados':'hsl(335,35%,64%)',
+  'Jogo Responsável':'hsl(150,35%,58%)',
+  'Compliance':'hsl(260,35%,62%)'
+};
+const RISCO_COLORS = {"Alto":"hsl(0,70%,60%)","Médio":"hsl(38,90%,62%)","Baixo":"hsl(142,45%,55%)"};
 const PAGE_SIZE = 25;
 const JIRA_BASE_URL = "https://estrela-bet.atlassian.net/browse/";
 
 function isOpen(s){return OPEN_STATUSES.includes(s)}
 function isCoaf(s){return COAF_STATUSES.includes(s)}
-function getSlaDays(tipo){if(tipo==="Alerta PLD")return 30;if(tipo==="Manipulação de Resultados")return 15;if(tipo==="KYP / Monitoramento")return 2;return 30}
-function getSlaRefDate(c){if(c.tipo==="Alerta PLD")return c.data_transacao_pld||c.criado;return c.criado}
-function getSlaStatus(c){if(!isOpen(c.status)&&!isCoaf(c.status))return"resolved";const days=getSlaDays(c.tipo);const ref=getSlaRefDate(c);if(!ref)return"ok";const elapsed=(Date.now()-new Date(ref).getTime())/864e5;if(elapsed>days)return"breached";if(elapsed>days*0.8)return"warning";return"ok"}
-function getSlaElapsed(c){const ref=getSlaRefDate(c);if(!ref)return null;return Math.round((Date.now()-new Date(ref).getTime())/864e5)}
-function getStatusCategory(s){if(COAF_STATUSES.includes(s))return"coaf";if(!OPEN_STATUSES.includes(s))return"closed";return"open"}
+
+// ==================== FUNÇÕES DE SLA ====================
+
+function isDiaUtil(date) {
+  const dia = date.getDay();
+  return dia !== 0 && dia !== 6;
+}
+
+function getProximoDiaUtil(data) {
+  const proximo = new Date(data);
+  proximo.setDate(proximo.getDate() + 1);
+  while (!isDiaUtil(proximo)) {
+    proximo.setDate(proximo.getDate() + 1);
+  }
+  return proximo;
+}
+
+function getDiasUteisDecorridos(dataReferencia) {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const ref = new Date(dataReferencia);
+  ref.setHours(0, 0, 0, 0);
+  
+  if (ref >= hoje) return 0;
+  
+  const primeiroDiaUtil = getProximoDiaUtil(ref);
+  
+  if (primeiroDiaUtil > hoje) return 0;
+  
+  let diasUteis = 0;
+  const current = new Date(primeiroDiaUtil);
+  
+  while (current <= hoje) {
+    if (isDiaUtil(current)) {
+      diasUteis++;
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  return diasUteis;
+}
+
+function getSlaDays(tipo){
+  if(tipo==="Alerta PLD") return 30;
+  if(tipo==="Manipulação de Resultados") return 15;
+  if(tipo==="KYP / Background Check" || tipo==="KYP / Monitoramento" || tipo==="KYP Afiliados") return 2;
+  return 30
+}
+
+function getSlaRefDate(c){
+  if(c.tipo==="Alerta PLD") return c.data_transacao_pld||c.criado;
+  return c.criado
+}
+
+function getSlaRemainingDays(c){
+  if(!isOpen(c.status)) return null;
+  
+  const ref = getSlaRefDate(c);
+  if(!ref) return null;
+  
+  const isKYP = c.tipo === "KYP / Background Check" || c.tipo === "KYP / Monitoramento" || c.tipo === "KYP Afiliados";
+  
+  if (isKYP) {
+    const diasDecorridos = getDiasUteisDecorridos(ref);
+    const diasUteisSLA = 2;
+    return diasUteisSLA - diasDecorridos;
+  } else {
+    const days = getSlaDays(c.tipo);
+    const refDate = new Date(ref);
+    const hoje = new Date();
+    refDate.setHours(0, 0, 0, 0);
+    hoje.setHours(0, 0, 0, 0);
+    
+    const start = new Date(refDate);
+    start.setDate(start.getDate() + 1);
+    const elapsed = Math.floor((hoje - start) / (1000 * 60 * 60 * 24));
+    
+    if (elapsed < 0) return days;
+    return days - elapsed;
+  }
+}
+
+function getSlaStatus(c){
+  if(!isOpen(c.status)) return "resolved";
+  const remaining = getSlaRemainingDays(c);
+  if(remaining === null) return "ok";
+  if(remaining < 0) return "breached";
+  if(remaining === 0) return "warning";
+  return "ok";
+}
+
+function getSlaElapsed(c){
+  const remaining = getSlaRemainingDays(c);
+  if(remaining === null) return null;
+  const days = getSlaDays(c.tipo);
+  return days - remaining;
+}
+
+function getDataVencimento(c) {
+  if (!isOpen(c.status)) return null;
+  
+  const ref = getSlaRefDate(c);
+  if (!ref) return null;
+  
+  const isKYP = c.tipo === "KYP / Background Check" || c.tipo === "KYP / Monitoramento" || c.tipo === "KYP Afiliados";
+  const refDate = new Date(ref);
+  refDate.setHours(0, 0, 0, 0);
+  
+  if (isKYP) {
+    const diasUteisSLA = 2;
+    let dataAtual = getProximoDiaUtil(refDate);
+    let diasUteisContados = 1;
+    while (diasUteisContados < diasUteisSLA) {
+      dataAtual = getProximoDiaUtil(dataAtual);
+      diasUteisContados++;
+    }
+    return dataAtual;
+  } else {
+    const days = getSlaDays(c.tipo);
+    const dataVencimento = new Date(refDate);
+    dataVencimento.setDate(dataVencimento.getDate() + days + 1);
+    return dataVencimento;
+  }
+}
+
+function getSlaDisplay(c) {
+  const isKYP = c.tipo === "KYP / Background Check" || c.tipo === "KYP / Monitoramento" || c.tipo === "KYP Afiliados";
+  const slaStatus = getSlaStatus(c);
+  const remaining = getSlaRemainingDays(c);
+  const elapsed = getSlaElapsed(c);
+  const totalDays = getSlaDays(c.tipo);
+  const dataVencimento = getDataVencimento(c);
+  const dataVencimentoStr = dataVencimento ? dataVencimento.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }) : null;
+  
+  if (!isOpen(c.status)) {
+    return { 
+      status: "resolved", 
+      text: "Concluído", 
+      badge: "badge-status-done", 
+      display: "Concluído",
+      tooltip: "Caso concluído"
+    };
+  }
+  
+  if (slaStatus === "breached") {
+    const atraso = Math.abs(remaining);
+    if (isKYP) {
+      return { 
+        status: "breached", 
+        text: `⚠ ${atraso} dia(s) útil(is) atrasado`, 
+        badge: "badge-risk-high", 
+        display: `⚠ ${atraso}/${totalDays}d úteis`,
+        tooltip: dataVencimentoStr ? `Vencimento previsto: ${dataVencimentoStr} (vencido)` : 'SLA vencido'
+      };
+    }
+    return { 
+      status: "breached", 
+      text: `⚠ ${atraso} dia(s) atrasado`, 
+      badge: "badge-risk-high", 
+      display: `⚠ ${elapsed}/${totalDays}d`,
+      tooltip: dataVencimentoStr ? `Vencimento previsto: ${dataVencimentoStr} (vencido)` : 'SLA vencido'
+    };
+  }
+  
+  if (slaStatus === "warning") {
+    if (isKYP) {
+      return { 
+        status: "warning", 
+        text: `⏳ Último dia útil`, 
+        badge: "badge-risk-med", 
+        display: `⏳ ${remaining}/${totalDays}d úteis`,
+        tooltip: dataVencimentoStr ? `Vence em: ${dataVencimentoStr}` : 'Vence hoje'
+      };
+    }
+    return { 
+      status: "warning", 
+      text: `⏳ ${remaining} dia(s) restantes`, 
+      badge: "badge-risk-med", 
+      display: `⏳ ${remaining}/${totalDays}d`,
+      tooltip: dataVencimentoStr ? `Vence em: ${dataVencimentoStr}` : 'Próximo do vencimento'
+    };
+  }
+  
+  if (isKYP) {
+    return { 
+      status: "ok", 
+      text: `✓ ${remaining} dia(s) útil(is) restante(s)`, 
+      badge: "badge-risk-low", 
+      display: `✓ ${remaining}/${totalDays}d úteis`,
+      tooltip: dataVencimentoStr ? `Vence em: ${dataVencimentoStr}` : 'No prazo'
+    };
+  }
+  return { 
+    status: "ok", 
+    text: `✓ ${remaining} dia(s) restante(s)`, 
+    badge: "badge-risk-low", 
+    display: `✓ ${remaining}/${totalDays}d`,
+    tooltip: dataVencimentoStr ? `Vence em: ${dataVencimentoStr}` : 'No prazo'
+  };
+}
+
+function getStatusCategory(s){
+  if(COAF_STATUSES.includes(s))return"coaf";
+  if(!OPEN_STATUSES.includes(s))return"closed";
+  return"open"
+}
 function fmtDate(d){if(!d)return"—";const dt=new Date(d);if(isNaN(dt))return"—";return dt.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"2-digit"})}
 function fmtNum(n){return n.toLocaleString("pt-BR")}
+
+// ==================== FUNÇÕES DE EXTRAÇÃO ====================
+function extractCPF(text) {
+  if (!text) return null;
+  let match = text.match(/\b\d{11}\b/);
+  if (match) return match[0];
+  match = text.match(/\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/);
+  if (match) return match[0].replace(/\D/g, '');
+  return null;
+}
+
+function extractEmail(text) {
+  if (!text) return null;
+  const match = text.match(/[\w.-]+@[\w.-]+\.\w+/);
+  return match ? match[0].toLowerCase() : null;
+}
+
+function formatCPF(c){return c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,"$1.$2.$3-$4")}
 
 // ==================== PARSER ====================
 function parseDate(value) {
   if (!value) return null;
-
-  // Caso 1: data do Excel (número)
   if (typeof value === 'number') {
     const d = XLSX.SSF.parse_date_code(value);
     if (!d) return null;
     return new Date(d.y, d.m - 1, d.d).toISOString();
   }
-
   const str = String(value).trim();
   if (!str) return null;
-
-  // Caso 2: formato brasileiro dd/MM/yyyy
   const br = str.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
   if (br) {
     return new Date(`${br[3]}-${br[2]}-${br[1]}`).toISOString();
   }
-
-  // Caso 3: ISO 8601 (yyyy-MM-dd ou yyyy-MM-ddTHH:mm:ss)
   const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (iso) {
     return new Date(str).toISOString();
   }
-
-  // Fallback
   const d = new Date(str);
   return isNaN(d) ? null : d.toISOString();
 }
@@ -186,22 +548,16 @@ function normTipo(raw){
   if(/manipula/i.test(s))return"Manipulação de Resultados";
   if(/respons[aá]vel/i.test(s))return"Jogo Responsável";
   if(/compliance/i.test(s))return"Compliance";
-  return s||"Afiliados";
+  if(/afiliados/i.test(s))return"KYP Afiliados";
+  return s||"KYP Afiliados";
 }
 
 function normRisco(raw) {
   if (!raw) return "Baixo";
-
-  const s = String(raw)
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .trim();
-
-  if (s.includes("alto") || s.includes("high") || s.includes("highest")) return "Alto";
+  const s = String(raw).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+  if (s.includes("alto") || s.includes("high")) return "Alto";
   if (s.includes("medio") || s.includes("medium")) return "Médio";
   if (s.includes("baixo") || s.includes("low")) return "Baixo";
-
   return "Baixo";
 }
 function parseWorkbook(wb){
@@ -214,8 +570,6 @@ function parseWorkbook(wb){
       const tipo=normTipo(String(row["Tipo de item"]||row["Issue Type"]||row["Tipo"]||""));
       
     let riscoRaw = "";
-
-    // REGRA CORRETA: para Alertas PLD, usar exclusivamente a Classificação Risco Usuário (coluna N)
     if (tipo === "Alerta PLD") {
       riscoRaw =
         row["Classificação Risco Usuário"] ||
@@ -223,17 +577,21 @@ function parseWorkbook(wb){
         row["Classificacao de Risco Usuario"] ||
         "";
     } else {
-      // fallback para outros tipos
       riscoRaw =
         row["Risco"] ||
         row["Prioridade"] ||
         row["Priority"] ||
         "";
     }
-
     const risco = normRisco(riscoRaw);
+     
+ const emailP = String(
+  row["Email"] ??
+  row["Custom field (Email)"] ??
+  ""
+ ).trim().toLowerCase() || null;
 
-      const transPld=parseDate(row["Data da Transação (PLD)"]||row["Data Transação PLD"]||row["Data Transação - PLD"]||row["Data Transacao PLD"]||row["Data da Transacao (PLD)"]||row["Data Transação"]||row["Transaction Date"]||row["Trans Date"]||row["Custom field (Data da Transação (PLD))"]||row["Custom field (Data Transação PLD)"]||null);
+ const transPld=parseDate(row["Data da Transação (PLD)"]||row["Data Transação PLD"]||row["Data Transação - PLD"]||row["Data Transacao PLD"]||row["Data da Transacao (PLD)"]||row["Data Transação"]||row["Transaction Date"]||row["Trans Date"]||row["Custom field (Data da Transação (PLD))"]||row["Custom field (Data Transação PLD)"]||null);
       results.push({
         id, resumo:String(row["Resumo"]||row["Summary"]||"").trim(),
         relator:row["Relator"]?String(row["Relator"]).trim():row["Reporter"]?String(row["Reporter"]).trim():null,
@@ -243,6 +601,7 @@ function parseWorkbook(wb){
         resolvido:parseDate(row["Resolvido"]||row["Resolved"]),
         responsavel:row["Responsável"]?String(row["Responsável"]).trim():row["Assignee"]?String(row["Assignee"]).trim():null,
         status:String(row["Status"]||"").trim(), tipo, risco, data_transacao_pld:transPld,
+  emailP,
       });
     }
   }
@@ -250,26 +609,207 @@ function parseWorkbook(wb){
 }
 
 // ==================== PERSON CORRELATION ====================
-function extractCPF(r){const m=r.match(/(\d{11})/);return m?m[1]:null}
-function extractEmail(r){const m=r.match(/[\w.-]+@[\w.-]+\.\w+/);return m?m[0].toLowerCase():null}
-function formatCPF(c){return c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,"$1.$2.$3-$4")}
-function buildPersonCorrelations(cases){
-  const map=new Map();
-  for(const c of cases){const cpf=extractCPF(c.resumo);const email=extractEmail(c.resumo);const id=cpf||email;if(!id)continue;const ex=map.get(id);if(ex)ex.cases.push(c);else map.set(id,{type:cpf?'cpf':'email',cases:[c]})}
-  const sixAgo=new Date();sixAgo.setMonth(sixAgo.getMonth()-6);const corr=[];
-  for(const[id,data]of map){
-    const open=data.cases.filter(c=>isOpen(c.status)).length;
-    const coafC=data.cases.filter(c=>isCoaf(c.status));
-    const closed=data.cases.filter(c=>!isOpen(c.status)&&!isCoaf(c.status)).length;
-    const coafDates=coafC.map(c=>c.atualizado||c.criado).filter(Boolean).map(d=>new Date(d)).sort((a,b)=>b-a);
-    const lastCoaf=coafDates.length?coafDates[0].toISOString():null;
-    const coafRecent=coafDates.some(d=>d>=sixAgo);
-    const allDates=data.cases.map(c=>c.criado).filter(Boolean).map(d=>new Date(d)).sort((a,b)=>a-b);
-    const hiCount=data.cases.filter(c=>c.risco==="Alto").length;
-    const risk=hiCount>data.cases.length/2?"Alto":data.cases.some(c=>c.risco==="Médio")?"Médio":"Baixo";
-    corr.push({identifier:id,type:data.type,totalCases:data.cases.length,openCases:open,closedCases:closed,coafCases:coafC.length,coafInLast6Months:coafRecent,lastCoafDate:lastCoaf,cases:data.cases,riskLevel:risk,firstCaseDate:allDates.length?allDates[0].toISOString():null,lastCaseDate:allDates.length?allDates[allDates.length-1].toISOString():null});
+
+function buildPersonCorrelations(cases) {
+  const people = new Map();          
+  const emailToCpf = new Map();      
+
+  function getOrCreateCPF(cpf) {
+    if (!people.has(cpf)) {
+      people.set(cpf, {
+        identifier: cpf,
+        type: 'cpf',
+        cases: [],
+        emails: new Set()
+      });
+    }
+    return people.get(cpf);
   }
-  return corr.sort((a,b)=>b.totalCases-a.totalCases);
+
+  function getOrCreateEmail(email) {
+    if (!people.has(email)) {
+      people.set(email, {
+        identifier: email,
+        type: 'email',
+        cases: []
+      });
+    }
+    return people.get(email);
+  }
+
+  for (const c of cases) {
+    const cpf = extractCPF(c.resumo);
+    const email = c.emailP || extractEmail(c.resumo);
+
+    if (cpf && email) {
+      const person = getOrCreateCPF(cpf);
+      person.cases.push(c);
+      person.emails.add(email);
+      emailToCpf.set(email, cpf);
+      continue;
+    }
+
+    if (cpf) {
+      getOrCreateCPF(cpf).cases.push(c);
+      continue;
+    }
+
+    if (email) {
+      if (emailToCpf.has(email)) {
+        people.get(emailToCpf.get(email)).cases.push(c);
+      } else {
+        getOrCreateEmail(email).cases.push(c);
+      }
+    }
+  }
+
+  const sixAgo = new Date();
+  sixAgo.setMonth(sixAgo.getMonth() - 6);
+
+  const corr = [];
+
+  for (const person of people.values()) {
+    const casesList = person.cases;
+    if (!casesList.length) continue;
+
+    const open = casesList.filter(c => isOpen(c.status)).length;
+    const closed = casesList.filter(c => !isOpen(c.status) && !isCoaf(c.status)).length;
+    const coafCases = casesList.filter(c => isCoaf(c.status));
+    const hiCount = casesList.filter(c => c.risco === "Alto").length;
+
+    const allDates = casesList
+      .map(c => c.criado)
+      .filter(Boolean)
+      .map(d => new Date(d))
+      .sort((a, b) => a - b);
+
+    const coafDates = coafCases
+      .map(c => c.atualizado || c.criado)
+      .filter(Boolean)
+      .map(d => new Date(d))
+      .sort((a, b) => b - a);
+
+    corr.push({
+      identifier: person.identifier,
+      type: person.type,
+      totalCases: casesList.length,
+      openCases: open,
+      closedCases: closed,
+      coafCases: coafCases.length,
+      coafInLast6Months: coafDates.some(d => d >= sixAgo),
+      lastCoafDate: coafDates.length ? coafDates[0].toISOString() : null,
+      cases: casesList,
+      riskLevel:
+        hiCount > casesList.length / 2
+          ? "Alto"
+          : casesList.some(c => c.risco === "Médio")
+          ? "Médio"
+          : "Baixo",
+      firstCaseDate: allDates.length ? allDates[0].toISOString() : null,
+      lastCaseDate: allDates.length ? allDates[allDates.length - 1].toISOString() : null
+    });
+  }
+
+  return corr.sort((a, b) => b.totalCases - a.totalCases);
+}
+
+// ==================== SLA ALERTS ====================
+function getSlaAlerts(cases){
+  const alerts = {
+    expired: [],
+    today: [],
+    soon: []
+  };
+  
+  cases.forEach(c => {
+    if(!isOpen(c.status)) return;
+    const remaining = getSlaRemainingDays(c);
+    if(remaining === null) return;
+    
+    if(remaining < 0){
+      alerts.expired.push({...c, remainingDays: remaining});
+    } else if(remaining === 0){
+      alerts.today.push({...c, remainingDays: remaining});
+    } else if(remaining >= 2 && remaining <= 5){
+      alerts.soon.push({...c, remainingDays: remaining});
+    }
+  });
+  
+  alerts.expired.sort((a,b) => a.remainingDays - b.remainingDays);
+  alerts.today.sort((a,b) => (a.criado || '').localeCompare(b.criado || ''));
+  alerts.soon.sort((a,b) => a.remainingDays - b.remainingDays);
+  
+  return alerts;
+}
+
+function renderSlaAlerts(cases){
+  const alerts = getSlaAlerts(cases);
+  const panel = document.getElementById('slaAlertsPanel');
+  if(!panel) return;
+  
+  const formatAlertItem = (c) => {
+    const rBadge = c.risco === 'Alto' ? 'badge-risk-high' : c.risco === 'Médio' ? 'badge-risk-med' : 'badge-risk-low';
+    const isKYP = c.tipo === "KYP / Background Check" || c.tipo === "KYP / Monitoramento" || c.tipo === "KYP Afiliados";
+    const remainingClass = c.remainingDays < 0 ? 'badge-sla-critical' : (c.remainingDays <= 2 ? 'badge-sla-warning' : '');
+    const dataVencimento = getDataVencimento(c);
+    const dataVencimentoStr = dataVencimento ? dataVencimento.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }) : null;
+    const tooltip = dataVencimentoStr ? `Vence em: ${dataVencimentoStr}` : '';
+    
+    let remainingText;
+    if (c.remainingDays < 0) {
+      remainingText = `${Math.abs(c.remainingDays)} dia(s) ${isKYP ? 'útil(is)' : ''} atrasado`;
+    } else if (c.remainingDays === 0) {
+      remainingText = `Vence hoje`;
+    } else {
+      remainingText = `${c.remainingDays} dia(s) ${isKYP ? 'útil(is)' : ''} restante(s)`;
+    }
+    
+    return `
+      <div class="sla-alert-item ${c.remainingDays < 0 ? 'sla-critical' : (c.remainingDays <= 2 ? 'sla-warning' : '')}">
+        <div style="flex:1; min-width:0">
+          <a href="${JIRA_BASE_URL}${c.id}" target="_blank" class="mono-id" style="font-size:11px">${c.id}</a>
+          <div style="font-size:0.7rem; color:var(--muted-fg); margin-top:2px">${c.responsavel || 'Sem responsável'} | ${c.tipo}</div>
+        </div>
+        <div style="text-align:right">
+          <span class="badge ${rBadge}" style="font-size:0.65rem">${c.risco}</span>
+          <span class="badge-sla-days ${remainingClass}" style="margin-left:6px" title="${tooltip}">${remainingText}</span>
+        </div>
+      </div>
+    `;
+  };
+  
+  panel.innerHTML = `
+    <div class="sla-alert-card">
+      <div class="sla-alert-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Vencidos</span>
+        <span class="badge badge-risk-high">${alerts.expired.length}</span>
+      </div>
+      <div class="sla-alert-list">
+        ${alerts.expired.length === 0 ? '<div class="empty-message">Nenhum caso vencido</div>' : alerts.expired.map(formatAlertItem).join('')}
+      </div>
+    </div>
+    <div class="sla-alert-card">
+      <div class="sla-alert-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4l2 2"/><circle cx="12" cy="12" r="10"/><path d="M12 3v2"/><path d="M12 19v2"/><path d="M3 12h2"/><path d="M19 12h2"/></svg>
+        <span>Vencem Hoje</span>
+        <span class="badge badge-risk-med">${alerts.today.length}</span>
+      </div>
+      <div class="sla-alert-list">
+        ${alerts.today.length === 0 ? '<div class="empty-message">Nenhum caso vence hoje</div>' : alerts.today.map(formatAlertItem).join('')}
+      </div>
+    </div>
+    <div class="sla-alert-card">
+      <div class="sla-alert-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Próximos Dias (2-5)</span>
+        <span class="badge badge-risk-low">${alerts.soon.length}</span>
+      </div>
+      <div class="sla-alert-list">
+        ${alerts.soon.length === 0 ? '<div class="empty-message">Nenhum caso vencendo nos próximos dias</div>' : alerts.soon.map(formatAlertItem).join('')}
+      </div>
+    </div>
+  `;
 }
 
 // ==================== STATE ====================
@@ -283,15 +823,10 @@ let personSortBy='totalCases';
 let personSearch='';
 let chartInstances=[];
 
-
-// ===== Enable values inside bars =====
 Chart.register(ChartDataLabels);
+Chart.defaults.plugins.legend = { display: false };
 Chart.defaults.plugins.datalabels = {
-  color: '#0f172a',
-  anchor: 'center',
-  align: 'center',
-  font: { size: 10, weight: '600' },
-  formatter: (v) => v
+  color: '#334155', anchor: 'center', align: 'center', font: { size: 13, weight: '600' }, formatter: (v) => v
 };
 
 // ==================== INIT ====================
@@ -314,27 +849,6 @@ function loadFile(file){
   reader.readAsArrayBuffer(file);
 }
 
-// Load sample data
-const SAMPLE=[{"id":"RP-10530","resumo":"Sportradar Integrity Exchange - Flagged Match - Football - Tanzania Prisons vs Singida Black Stars SC","relator":"Vinicius Tonini dos Santos","prioridade":"Highest","criado":"2026-03-19T07:00:00","atualizado":"2026-03-19T07:00:00","resolvido":null,"responsavel":"Vinicius Tonini dos Santos","status":"Novo","tipo":"Manipulação de Resultados","risco":"Alto","data_transacao_pld":null},{"id":"RP-10529","resumo":"Sportradar Integrity Exchange - Flagged Match - Football - Kitara FC vs Bunyaruguru United FC","relator":"Vinicius Tonini dos Santos","prioridade":"Highest","criado":"2026-03-19T06:58:00","atualizado":"2026-03-19T06:58:00","resolvido":null,"responsavel":"Vinicius Tonini dos Santos","status":"Novo","tipo":"Manipulação de Resultados","risco":"Alto","data_transacao_pld":null},{"id":"RP-10528","resumo":"Sportradar Integrity Exchange - Flagged Match - Football - Hindustan FC vs National United SC","relator":"Vinicius Tonini dos Santos","prioridade":"Highest","criado":"2026-03-19T06:58:00","atualizado":"2026-03-19T06:58:00","resolvido":null,"responsavel":"Vinicius Tonini dos Santos","status":"Novo","tipo":"Manipulação de Resultados","risco":"Alto","data_transacao_pld":null},{"id":"RP-10527","resumo":"Sportradar Integrity Exchange - Flagged Match - Football - Karmiotissa FC vs AO Agia Napa","relator":"Vinicius Tonini dos Santos","prioridade":"Highest","criado":"2026-03-19T06:58:00","atualizado":"2026-03-19T06:58:00","resolvido":null,"responsavel":"Vinicius Tonini dos Santos","status":"Novo","tipo":"Manipulação de Resultados","risco":"Alto","data_transacao_pld":null},{"id":"RP-10526","resumo":"Sportradar Integrity Exchange - Flagged Match - Football - Nautico RR vs Progresso RR","relator":"Vinicius Tonini dos Santos","prioridade":"Highest","criado":"2026-03-19T06:58:00","atualizado":"2026-03-19T06:58:00","resolvido":null,"responsavel":"Vinicius Tonini dos Santos","status":"Novo","tipo":"Manipulação de Resultados","risco":"Alto","data_transacao_pld":null},{"id":"RP-10525","resumo":"Depósitos 50k Mês - 09520897933","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10524","resumo":"Depósitos 50k Mês - 29047583809","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:30:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10523","resumo":"Depósitos 50k Mês - 03483605339","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:30:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-01T00:00:00"},{"id":"RP-10522","resumo":"Depósitos 50k Mês - 00584432070","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:30:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-01T00:00:00"},{"id":"RP-10521","resumo":"Depósitos 50k Mês - 54929504287","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:30:00","resolvido":"2026-03-18T17:30:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10520","resumo":"Depósitos 50k Mês - 63562421168","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:30:00","resolvido":"2026-03-18T17:30:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10519","resumo":"Depósitos 50k Mês - 05885194564","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:30:00","resolvido":"2026-03-18T17:30:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-03T00:00:00"},{"id":"RP-10518","resumo":"Depósitos 50k Mês - 14332526783","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10517","resumo":"Depósitos 50k Mês - 12978041714","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:30:00","resolvido":"2026-03-18T17:30:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10516","resumo":"Depósitos 50k Mês - 06956551322","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10515","resumo":"Depósitos 50k Mês - 93727640278","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-03T00:00:00"},{"id":"RP-10514","resumo":"Depósitos 50k Mês - 02178726461","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:27:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10513","resumo":"Depósitos 50k Mês - 05210244989","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10512","resumo":"Depósitos 50k Mês - 17252631737","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10511","resumo":"Depósitos 50k Mês - 40351978828","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10510","resumo":"Depósitos 50k Mês - 13568072750","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-03T00:00:00"},{"id":"RP-10509","resumo":"Depósitos 50k Mês - 02043952404","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-03T00:00:00"},{"id":"RP-10508","resumo":"Depósitos 50k Mês - 02927239622","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-03T00:00:00"},{"id":"RP-10507","resumo":"Depósitos 50k Mês - 13755510359","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10506","resumo":"Depósitos 50k Mês - 11672658667","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10505","resumo":"Depósitos 50k Mês - 86255401049","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-02T00:00:00"},{"id":"RP-10504","resumo":"Depósitos 50k Mês - 50126651809","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10503","resumo":"Depósitos 50k Mês - 05838255323","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-03T00:00:00"},{"id":"RP-10502","resumo":"Depósitos 50k Mês - 13419543409","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10501","resumo":"Depósitos 50k Mês - 46590332878","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10500","resumo":"Depósitos 50k Mês - 30897617851","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10499","resumo":"Depósitos 50k Mês - 79654894904","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10498","resumo":"Depósitos 50k Mês - 43211389814","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-03T00:00:00"},{"id":"RP-10497","resumo":"Depósitos 50k Mês - 02780927720","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-03T00:00:00"},{"id":"RP-10496","resumo":"Depósitos 50k Mês - 02572017776","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10495","resumo":"Depósitos 50k Mês - 11415246602","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10494","resumo":"Depósitos 50k Mês - 04909254218","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10493","resumo":"Depósitos 50k Mês - 08678188677","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":"2026-03-18T17:28:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10492","resumo":"Depósitos 50k Mês - 12217444611","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10491","resumo":"Depósitos 50k Mês - 02224412754","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10490","resumo":"Depósitos 50k Mês - 12775796605","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-05T00:00:00"},{"id":"RP-10489","resumo":"Depósitos 50k Mês - 82036152791","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:29:00","resolvido":"2026-03-18T17:29:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-05T00:00:00"},{"id":"RP-10488","resumo":"Depósitos 50k Mês - 01337985341","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-05T00:00:00"},{"id":"RP-10487","resumo":"Depósitos 50k Mês - 08862814909","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10486","resumo":"Depósitos 50k Mês - 11129041743","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":"2026-03-18T17:28:00","responsavel":"Leandro Santos Ferreira","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-05T00:00:00"},{"id":"RP-10485","resumo":"Depósitos 50k Mês - 01836569114","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-04T00:00:00"},{"id":"RP-10484","resumo":"Depósitos 50k Mês - 09658398693","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":"2026-03-18T17:28:00","responsavel":"Pablo Satelis de Macedo","status":"Concluido - PLD","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-05T00:00:00"},{"id":"RP-10483","resumo":"Depósitos 50k Mês - 08658380629","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-05T00:00:00"},{"id":"RP-10482","resumo":"Depósitos 50k Mês - 12356570438","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":null,"responsavel":"Pablo Satelis de Macedo","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-06T00:00:00"},{"id":"RP-10481","resumo":"Depósitos 50k Mês - 05875508485","relator":"Automation for Jira","prioridade":"Lowest","criado":"2026-03-18T17:26:00","atualizado":"2026-03-18T17:28:00","resolvido":null,"responsavel":"Leandro Santos Ferreira","status":"Aguardando Retorno Diligências","tipo":"Alerta PLD","risco":"Alto","data_transacao_pld":"2026-02-05T00:00:00"}];
-// allCases = SAMPLE; // upload-first
-{const now=new Date(),ago=new Date(now);ago.setMonth(ago.getMonth()-3);filters.dateFrom=ago.toISOString().slice(0,10);filters.dateTo=now.toISOString().slice(0,10)}
-// renderAll(); // upload-first
-// ===== FIX: Stable text search (no focus loss) =====
-function attachSearchListener(){
-  const input = document.getElementById('textSearch');
-  if(!input || input.dataset.bound) return;
-  input.dataset.bound = 'true';
-  let t;
-  input.addEventListener('input', () => {
-    clearTimeout(t);
-    t = setTimeout(() => {
-      filters.text = input.value;
-      tablePage = 0;
-      renderAll();
-    }, 150);
-  });
-}
-
 // ==================== FILTER ====================
 function applyFilters(cases,f){
   return cases.filter(c=>{
@@ -354,40 +868,136 @@ function applyFilters(cases,f){
   });
 }
 
+function getFacetSubset(){
+  const f = { ...filters, risco:'', responsavel:'', status:'', sla:'' };
+  return applyFilters(allCases, f);
+}
+
 // ==================== RENDER ALL ====================
 function renderAll(){
+  if(allCases.length === 0) {
+    document.getElementById('filtersSection').style.display='none';
+    document.getElementById('dateFilters').style.display='none';
+    document.getElementById('slaAlertsPanel').style.display='none';
+    document.getElementById('personPanel').style.display='none';
+    document.getElementById('tablePanel').style.display='none';
+    document.getElementById('kpiGrid').innerHTML = '<div class="kpi-card"><div class="kpi-value" style="color:var(--muted-fg)">—</div><div class="kpi-label">Aguardando upload da planilha</div></div>';
+    document.getElementById('chartsGrid').innerHTML = '<div class="chart-card"><h3 class="chart-title">Carregue uma planilha para visualizar os dados</h3></div>';
+    return;
+  }
+  
   const filtered=applyFilters(allCases,filters);
   renderFilters();
+  renderSlaAlerts(filtered);
   renderKPIs(filtered);
   renderCharts(filtered);
   renderPersonPanel(filtered);
   renderTable(filtered);
   document.getElementById('filtersSection').style.display='flex';
   document.getElementById('dateFilters').style.display='flex';
+  document.getElementById('slaAlertsPanel').style.display='grid';
   document.getElementById('personPanel').style.display='block';
   document.getElementById('tablePanel').style.display='block';
+  attachKpiCardGlow();
 }
 
-// ==================== FILTERS RENDER ====================
+function attachKpiCardGlow() {
+  const cards = document.querySelectorAll('.kpi-card');
+  cards.forEach(card => {
+    card.removeEventListener('mouseenter', handleMouseEnter);
+    card.removeEventListener('mouseleave', handleMouseLeave);
+    card.addEventListener('mouseenter', handleMouseEnter);
+    card.addEventListener('mouseleave', handleMouseLeave);
+  });
+}
+
+function handleMouseEnter(e) {
+  const card = e.currentTarget;
+  const valueElement = card.querySelector('.kpi-value');
+  if (valueElement) {
+    const color = getComputedStyle(valueElement).color;
+    card.style.transition = 'box-shadow 0.18s ease';
+    card.style.boxShadow = `0 0 12px 2px ${color}, 0 8px 20px rgba(0,0,0,0.15)`;
+  }
+}
+
+function handleMouseLeave(e) {
+  const card = e.currentTarget;
+  card.style.boxShadow = '';
+}
+
+function clearDateFilters(){
+  filters.dateFrom=''; filters.dateTo=''; filters.transFrom=''; filters.transTo='';
+  tablePage = 0;
+  renderAll();
+}
+
+function clearOnlyFilters(){
+  filters.tipo=''; filters.risco=''; filters.responsavel=''; filters.status=''; filters.sla=''; filters.text='';
+  tablePage = 0;
+  expandedPerson = null;
+  personSearch = '';
+  const gs = document.getElementById('globalSearch'); if (gs) gs.value='';
+  renderAll();
+}
+
 function renderFilters(){
-  const tipos=[...new Set(allCases.map(c=>c.tipo))].sort();
-  const resps=[...new Set(allCases.map(c=>c.responsavel).filter(Boolean))].sort();
-  const statuses=[...new Set(allCases.map(c=>c.status))].sort();
-  let h=`<input type="text" id="textSearch" class="filter-input" style="min-width:280px" placeholder="🔍 Buscar (ID, resumo, responsável, CPF...)" value="${filters.text}">`;
-  h+=`<select class="filter-select" onchange="filters.tipo=this.value;renderAll()"><option value="">Todos os tipos</option>${tipos.map(t=>`<option${filters.tipo===t?' selected':''}>${t}</option>`).join('')}</select>`;
-  h+=`<select class="filter-select" onchange="filters.risco=this.value;renderAll()"><option value="">Todos os riscos</option><option${filters.risco==='Alto'?' selected':''}>Alto</option><option${filters.risco==='Médio'?' selected':''}>Médio</option><option${filters.risco==='Baixo'?' selected':''}>Baixo</option></select>`;
-  h+=`<select class="filter-select" onchange="filters.responsavel=this.value;renderAll()"><option value="">Todos os responsáveis</option>${resps.map(r=>`<option${filters.responsavel===r?' selected':''}>${r}</option>`).join('')}</select>`;
-  h+=`<select class="filter-select" onchange="filters.status=this.value;renderAll()"><option value="">Todos os status</option><option value="open"${filters.status==='open'?' selected':''}>📂 Abertos</option><option value="closed"${filters.status==='closed'?' selected':''}>✅ Concluídos</option><option value="coaf"${filters.status==='coaf'?' selected':''}>📋 COAF</option>${statuses.map(s=>`<option value="${s}"${filters.status===s?' selected':''}>${s}</option>`).join('')}</select>`;
-  h+=`<select class="filter-select" onchange="filters.sla=this.value;renderAll()"><option value="">Todos os SLA</option><option value="breached"${filters.sla==='breached'?' selected':''}>⚠ Estourado</option><option value="warning"${filters.sla==='warning'?' selected':''}>⏳ Em Risco</option><option value="ok"${filters.sla==='ok'?' selected':''}>✓ No Prazo</option><option value="resolved"${filters.sla==='resolved'?' selected':''}>✅ Resolvido</option></select>`;
-  document.getElementById('filtersSection').innerHTML=h; attachSearchListener();
+  const subset = getFacetSubset();
+  const tipos = [...new Set(allCases.map(c=>c.tipo))].sort();
+  const riscoSet = new Set(subset.map(c=>c.risco));
+  const respsSet = new Set(subset.map(c=>c.responsavel).filter(Boolean));
+  const statusesSet = new Set(subset.map(c=>c.status));
 
-  let d=`<span class="subtitle">Criação de:</span><input type="date" class="filter-input" style="width:140px" value="${filters.dateFrom}" onchange="filters.dateFrom=this.value;renderAll()"><span class="subtitle">até:</span><input type="date" class="filter-input" style="width:140px" value="${filters.dateTo}" onchange="filters.dateTo=this.value;renderAll()">`;
-  d+=`<span class="subtitle" style="margin-left:0.5rem">Trans. PLD de:</span><input type="date" class="filter-input" style="width:140px" value="${filters.transFrom}" onchange="filters.transFrom=this.value;renderAll()"><span class="subtitle">até:</span><input type="date" class="filter-input" style="width:140px" value="${filters.transTo}" onchange="filters.transTo=this.value;renderAll()">`;
-  if(filters.dateFrom||filters.dateTo)d+=`<a href="#" style="font-size:0.75rem;color:var(--primary)" onclick="event.preventDefault();filters.dateFrom='';filters.dateTo='';renderAll()">Remover filtro de data</a>`;
-  document.getElementById('dateFilters').innerHTML=d;
+  let slaCounts = {breached:0, warning:0, ok:0, resolved:0};
+  subset.forEach(c=>{ const s=getSlaStatus(c); if (s) slaCounts[s] = (slaCounts[s]||0)+1; });
+  const slaPossible = Object.entries(slaCounts).filter(([k,v])=>v>0).map(([k])=>k);
+
+  if (filters.risco && !riscoSet.has(filters.risco)) filters.risco = '';
+  if (filters.responsavel && !respsSet.has(filters.responsavel)) filters.responsavel = '';
+  if (filters.status && !(['open','closed','coaf'].includes(filters.status) || statusesSet.has(filters.status))) filters.status = '';
+  if (filters.sla && !slaPossible.includes(filters.sla)) filters.sla = '';
+
+  const hasOpen   = subset.some(c=>isOpen(c.status));
+  const hasClosed = subset.some(c=>!isOpen(c.status) && !isCoaf(c.status));
+  const hasCoaf   = subset.some(c=>isCoaf(c.status));
+
+  let h = ``;
+  h += `<select class="filter-select" onchange="filters.tipo=this.value;renderAll()">
+          <option value="">Todos os tipos</option>
+          ${tipos.map(t=>`<option${filters.tipo===t?' selected':''}>${t}</option>`).join('')}
+        </select>`;
+  h += `<select class="filter-select" onchange="filters.risco=this.value;renderAll()">
+          <option value="">Todos os riscos</option>
+          ${['Alto','Médio','Baixo'].filter(r=>riscoSet.has(r)).map(r=>`<option${filters.risco===r?' selected':''}>${r}</option>`).join('')}
+        </select>`;
+  const resps = Array.from(respsSet).sort();
+  h += `<select class="filter-select" onchange="filters.responsavel=this.value;renderAll()">
+          <option value="">Todos os responsáveis</option>
+          ${resps.map(r=>`<option${filters.responsavel===r?' selected':''}>${r}</option>`).join('')}
+        </select>`;
+  const statusOpts = `${hasOpen?`<option value="open"${filters.status==='open'?' selected':''}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Abertos</option>`:''}
+                      ${hasClosed?`<option value="closed"${filters.status==='closed'?' selected':''}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg>Concluídos</option>`:''}
+                      ${hasCoaf?`<option value="coaf"${filters.status==='coaf'?' selected':''}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Comunicados</option>`:''}
+                      ${Array.from(statusesSet).sort().map(s=>`<option value="${s}"${filters.status===s?' selected':''}>${s}</option>`).join('')}`;
+  h += `<select class="filter-select" onchange="filters.status=this.value;renderAll()">
+          <option value="">Todos os status</option>
+          ${statusOpts}
+        </select>`;
+  const slaOrder = ['breached','warning','ok','resolved'];
+  const slaLabels = {breached:'⚠ Estourado', warning:'⏳ Em Risco', ok:'✓ No Prazo', resolved:'✅ Resolvido'};
+  const slaOptions = slaOrder.filter(k=>slaPossible.includes(k)).map(k=>`<option value="${k}"${filters.sla===k?' selected':''}>${slaLabels[k]}</option>`).join('');
+  h += `<select class="filter-select" onchange="filters.sla=this.value;renderAll()">
+          <option value="">Todos os SLA</option>
+          ${slaOptions}
+        </select>`;
+  h += `<button id="btnClearFilters" class="filter-input" style="height:36px;cursor:pointer;min-width:180px" onclick="clearOnlyFilters()">Limpar filtros</button>`;
+  document.getElementById('filtersSection').innerHTML = h;
+
+  let d = `<span class="subtitle">Criação de:</span><input type="date" class="filter-input" style="width:140px" value="${filters.dateFrom}" onchange="filters.dateFrom=this.value;renderAll()"><span class="subtitle">até:</span><input type="date" class="filter-input" style="width:140px" value="${filters.dateTo}" onchange="filters.dateTo=this.value;renderAll()">`;
+  d += `<span class="subtitle" style="margin-left:0.5rem">Trans. PLD de:</span><input type="date" class="filter-input" style="width:140px" value="${filters.transFrom}" onchange="filters.transFrom=this.value;renderAll()"><span class="subtitle">até:</span><input type="date" class="filter-input" style="width:140px" value="${filters.transTo}" onchange="filters.transTo=this.value;renderAll()"> <button id="btnClearDates" class="filter-input" style="height:36px;cursor:pointer;margin-left:0.5rem;min-width:180px" onclick="clearDateFilters()">Limpar datas</button>`;
+  document.getElementById('dateFilters').innerHTML = d;
 }
 
-// ==================== KPI RENDER ====================
 function renderKPIs(cases){
   const open=cases.filter(c=>isOpen(c.status)).length;
   const closed=cases.filter(c=>!isOpen(c.status)&&!isCoaf(c.status)).length;
@@ -400,7 +1010,7 @@ function renderKPIs(cases){
     {v:fmtNum(cases.length),l:"Total de Casos",color:"var(--foreground)"},
     {v:fmtNum(open),l:"Abertos",color:"var(--status-open)"},
     {v:fmtNum(closed),l:"Concluídos",color:"var(--status-done)"},
-    {v:fmtNum(coaf),l:"COAF",color:"var(--coaf)"},
+    {v:fmtNum(coaf),l:"Comunicados",color:"var(--coaf)"},
     {v:fmtNum(breached),l:"SLA Estourado",color:"var(--risk-high)"},
     {v:fmtNum(high),l:"Risco Alto",color:"var(--risk-high)"},
     {v:avg+"d",l:"Tempo Médio Resolução",color:"var(--foreground)"},
@@ -408,7 +1018,6 @@ function renderKPIs(cases){
   document.getElementById('kpiGrid').innerHTML=kpis.map(k=>`<div class="kpi-card"><div class="kpi-value" style="color:${k.color}">${k.v}</div><div class="kpi-label">${k.l}</div></div>`).join('');
 }
 
-// ==================== CHARTS ====================
 function destroyCharts(){chartInstances.forEach(c=>c.destroy());chartInstances=[]}
 function makeChart(canvasId,config){
   const ctx=document.getElementById(canvasId);
@@ -420,13 +1029,18 @@ function makeChart(canvasId,config){
 
 function renderCharts(cases){
   destroyCharts();
-  // Data prep
   const tipoCount={};cases.forEach(c=>tipoCount[c.tipo]=(tipoCount[c.tipo]||0)+1);
   const riscoCount={};cases.forEach(c=>riscoCount[c.risco]=(riscoCount[c.risco]||0)+1);
   const timeline=getTimeline(cases);
   const workload={};cases.filter(c=>c.responsavel&&isOpen(c.status)).forEach(c=>workload[c.responsavel]=(workload[c.responsavel]||0)+1);
   const wlSorted=Object.entries(workload).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  let breached=0,warning=0,ok=0;cases.filter(c=>isOpen(c.status)||isCoaf(c.status)).forEach(c=>{const s=getSlaStatus(c);if(s==='breached')breached++;else if(s==='warning')warning++;else ok++});
+  let breached=0,warning=0,ok=0;
+  cases.filter(c => isOpen(c.status)).forEach(c=>{
+    const s=getSlaStatus(c);
+    if(s==='breached')breached++;
+    else if(s==='warning')warning++;
+    else ok++
+  });
   const statusD={open:cases.filter(c=>isOpen(c.status)).length,coaf:cases.filter(c=>isCoaf(c.status)).length,closed:cases.filter(c=>!isOpen(c.status)&&!isCoaf(c.status)).length};
   const resTrend=getResTrend(cases);
 
@@ -447,15 +1061,15 @@ function renderCharts(cases){
   const rLabels=Object.keys(riscoCount);
   makeChart('chRisco',{type:'bar',data:{labels:rLabels,datasets:[{data:rLabels.map(r=>riscoCount[r]),backgroundColor:rLabels.map(r=>RISCO_COLORS[r]||'#94a3b8')}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}});
 
-  makeChart('chTimeline',{type:'line',data:{labels:timeline.map(t=>t.month),datasets:[{label:'Criados',data:timeline.map(t=>t.criados),borderColor:'hsl(217,91%,60%)',backgroundColor:'hsla(217,91%,60%,0.15)',fill:true,tension:0.3},{label:'Resolvidos',data:timeline.map(t=>t.resolvidos),borderColor:'hsl(142,71%,35%)',backgroundColor:'hsla(142,71%,35%,0.15)',fill:true,tension:0.3},{label:'COAF',data:timeline.map(t=>t.coaf),borderColor:'hsl(263,70%,50%)',backgroundColor:'hsla(263,70%,50%,0.15)',fill:true,tension:0.3}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
+  makeChart('chTimeline',{type:'line',data:{labels:timeline.map(t=>t.month),datasets:[{label:'Criados',data:timeline.map(t=>t.criados),borderColor:'hsl(217,60%,62%)',backgroundColor:'hsla(217,60%,62%,0.15)',fill:true,tension:0.3},{label:'Resolvidos',data:timeline.map(t=>t.resolvidos),borderColor:'hsl(142,45%,55%)',backgroundColor:'hsla(142,45%,55%,0.14)',fill:true,tension:0.3},{label:'COAF',data:timeline.map(t=>t.coaf),borderColor:'hsl(263,45%,64%)',backgroundColor:'hsla(263,45%,64%,0.15)',fill:true,tension:0.3}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
 
-  makeChart('chWorkload',{type:'bar',data:{labels:wlSorted.map(w=>w[0].split(' ').slice(0,2).join(' ')),datasets:[{data:wlSorted.map(w=>w[1]),backgroundColor:'hsl(215,50%,23%)'}]},options:{plugins:{legend:{display:false},datalabels:{display:true}},scales:{x:{ticks:{font:{size:9},maxRotation:20}},y:{ticks:{font:{size:11}}}}}});
+  makeChart('chWorkload',{type:'bar',data:{labels:wlSorted.map(w=>w[0].split(' ').slice(0,2).join(' ')),datasets:[{data:wlSorted.map(w=>w[1]),backgroundColor:'hsla(215,35%,62%,0.60)'}]},options:{plugins:{legend:{display:false},datalabels:{display:true}},scales:{x:{ticks:{font:{size:9},maxRotation:20}},y:{ticks:{font:{size:11}}}}}});
 
-  makeChart('chSla',{type:'bar',data:{labels:['Estourado','Em Risco','No Prazo'],datasets:[{data:[breached,warning,ok],backgroundColor:['hsl(0,72%,51%)','hsl(38,92%,50%)','hsl(142,71%,35%)']}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}});
+  makeChart('chSla',{type:'bar',data:{labels:['Estourado','Em Risco','No Prazo'],datasets:[{data:[breached,warning,ok],backgroundColor:['hsl(0,70%,60%)','hsl(38,90%,62%)','hsl(142,45%,55%)']}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}});
 
-  makeChart('chStatus',{type:'bar',data:{labels:['Abertos','COAF','Concluídos'],datasets:[{data:[statusD.open,statusD.coaf,statusD.closed],backgroundColor:['hsl(217,91%,60%)','hsl(263,70%,50%)','hsl(142,71%,35%)']}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}});
+  makeChart('chStatus',{type:'bar',data:{labels:['Abertos','COAF','Concluídos'],datasets:[{data:[statusD.open,statusD.coaf,statusD.closed],backgroundColor:['hsl(217,60%,62%)','hsl(263,45%,64%)','hsl(142,45%,55%)']}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}});
 
-  makeChart('chRes',{type:'line',data:{labels:resTrend.map(r=>r.month),datasets:[{label:'Dias',data:resTrend.map(r=>r.avg),borderColor:'hsl(263,70%,50%)',backgroundColor:'hsl(263,70%,50%)',pointRadius:3,tension:0.3}]},options:{plugins:{legend:{display:false},datalabels:{display:true}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
+  makeChart('chRes',{type:'line',data:{labels:resTrend.map(r=>r.month),datasets:[{label:'Dias',data:resTrend.map(r=>r.avg),borderColor:'hsl(263,45%,64%)',backgroundColor:'hsl(263,45%,64%)',pointRadius:3,tension:0.3}]},options:{plugins:{legend:{display:false},datalabels:{display:true}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
 }
 
 function getTimeline(cases){
@@ -473,7 +1087,7 @@ function getResTrend(cases){
   return[...m.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([month,days])=>({month,avg:Math.round(days.reduce((s,d)=>s+d,0)/days.length)}));
 }
 
-// ==================== PERSON PANEL ====================
+// ==================== RENDER PERSON PANEL ====================
 function renderPersonPanel(cases){
   const panel=document.getElementById('personPanel');
   const corr=buildPersonCorrelations(cases);
@@ -485,6 +1099,9 @@ function renderPersonPanel(cases){
   const totalRecent=filtered.filter(p=>p.coafInLast6Months).length;
   const showList=reincidentes.length>0?reincidentes:filtered;
 
+  const tableWrap = document.querySelector('#personPanel .table-wrap');
+  const scrollPosition = tableWrap ? tableWrap.scrollTop : 0;
+
   let h=`<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.75rem;margin-bottom:1rem">
     <div><h3 class="chart-title" style="margin-bottom:0">Correlação por CPF / Pessoa</h3>
     <p class="subtitle" style="margin-top:0.25rem">${corr.length} pessoas · ${reincidentes.length} reincidentes · ${totalWithCoaf} com COAF · ${totalRecent} COAF &lt;6 meses</p></div>
@@ -493,37 +1110,70 @@ function renderPersonPanel(cases){
       <select class="filter-select" onchange="personSortBy=this.value;renderAll()"><option value="totalCases"${personSortBy==='totalCases'?' selected':''}>Total</option><option value="openCases"${personSortBy==='openCases'?' selected':''}>Abertos</option><option value="coafCases"${personSortBy==='coafCases'?' selected':''}>COAF</option></select>
     </div></div>`;
   h+=`<div class="person-summary"><div class="mini-kpi"><div class="val">${corr.length}</div><div class="lbl">Pessoas</div></div><div class="mini-kpi"><div class="val" style="color:var(--risk-high)">${reincidentes.length}</div><div class="lbl">Reincidentes</div></div><div class="mini-kpi"><div class="val" style="color:var(--coaf)">${totalWithCoaf}</div><div class="lbl">Com COAF</div></div><div class="mini-kpi"><div class="val" style="color:var(--risk-med)">${totalRecent}</div><div class="lbl">COAF &lt;6m</div></div></div>`;
-  h+=`<div class="table-wrap" style="max-height:500px;overflow-y:auto"><table class="data-table"><thead style="position:sticky;top:0;background:var(--card);z-index:5"><tr><th>CPF/Email</th><th>Total</th><th>Abertos</th><th>Encerrados</th><th>COAF</th><th>Último COAF</th><th>COAF &lt;6m</th><th>Risco</th><th>Primeiro Caso</th><th>Último Caso</th></tr></thead><tbody>`;
+  h+=`<div class="table-wrap" style="max-height:360px;overflow-y:auto"><table class="data-table"><thead style="position:sticky;top:0;background:var(--card);z-index:5">发展
+    <th>CPF/Email</th><th>Total</th><th>Abertos</th><th>Encerrados</th><th>COAF</th><th>Último COAF</th><th>COAF &lt;6m</th><th>Risco</th><th>Primeiro Caso</th><th>Último Caso</th>
+    </thead><tbody>`;
+  
   showList.slice(0,100).forEach(p=>{
     const rClass=p.riskLevel==='Alto'?'badge-risk-high':p.riskLevel==='Médio'?'badge-risk-med':'badge-risk-low';
     const displayId=p.type==='cpf'?formatCPF(p.identifier):p.identifier;
+    const isExpanded = expandedPerson === p.identifier;
+    
     h+=`<tr style="cursor:pointer" onclick="expandedPerson=expandedPerson==='${p.identifier}'?null:'${p.identifier}';renderAll()">
-      <td class="mono-id">${displayId}</td><td style="font-weight:700">${p.totalCases}</td>
-      <td><span class="badge badge-status-open">${p.openCases}</span></td>
-      <td><span class="badge badge-status-done">${p.closedCases}</span></td>
-      <td>${p.coafCases>0?`<span class="badge badge-coaf">${p.coafCases}</span>`:'—'}</td>
-      <td>${fmtDate(p.lastCoafDate)}</td>
-      <td>${p.coafCases>0?(p.coafInLast6Months?'<span class="badge badge-risk-high">⚠ Sim</span>':'<span class="badge badge-risk-low">Não</span>'):'—'}</td>
-      <td><span class="badge ${rClass}">${p.riskLevel}</span></td>
-      <td>${fmtDate(p.firstCaseDate)}</td><td>${fmtDate(p.lastCaseDate)}</td></tr>`;
-    if(expandedPerson===p.identifier){
-      h+=`<tr><td colspan="10" style="padding:0"><div class="expanded-cases"><p style="font-size:0.75rem;font-weight:600;margin-bottom:0.5rem">Casos vinculados:</p>`;
+      <td class="mono-id">${displayId}   </td>
+      <td style="font-weight:700">${p.totalCases}   </td>
+      <td><span class="badge badge-status-open">${p.openCases}</span>   </td>
+      <td><span class="badge badge-status-done">${p.closedCases}</span>   </td>
+      <td>${p.coafCases>0?`<span class="badge badge-coaf">${p.coafCases}</span>`:'—'}   </td>
+      <td>${fmtDate(p.lastCoafDate)}   </td>
+      <td>${p.coafCases>0?(p.coafInLast6Months?'<span class="badge badge-risk-high">⚠ Sim</span>':'<span class="badge badge-risk-low">Não</span>'):'—'}   </td>
+      <td><span class="badge ${rClass}">${p.riskLevel}</span>   </td>
+      <td>${fmtDate(p.firstCaseDate)}   </td>
+      <td>${fmtDate(p.lastCaseDate)}   </td>
+      </tr>`;
+    
+    if(isExpanded){
+      h+=`<tr class="expanded-row">
+        <td colspan="10" style="padding:0; background: var(--muted);">
+          <div style="padding:0.5rem 0.75rem;">
+            <p style="font-size:0.7rem; font-weight:600; margin-bottom:0.5rem; color:var(--muted-fg); display:flex; align-items:center; gap:0.25rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              Casos vinculados (${p.cases.length}):
+            </p>
+            <div style="display:flex; flex-direction:column; gap:0.25rem;">`;
+      
       p.cases.forEach(c=>{
         const rc=c.risco==='Alto'?'badge-risk-high':c.risco==='Médio'?'badge-risk-med':'badge-risk-low';
-        h+=`<div style="display:flex;align-items:center;gap:0.75rem;font-size:0.75rem;margin-bottom:2px"><a href="${JIRA_BASE_URL}${c.id}" target="_blank" class="mono-id" style="font-size:11px">${c.id}</a><span style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.resumo}">${c.resumo}</span><span class="badge ${rc}">${c.risco}</span><span style="color:var(--muted-fg)">${c.status}</span><span style="color:var(--muted-fg)">${fmtDate(c.criado)}</span></div>`;
+        h+=`<div style="display:flex; align-items:center; gap:0.5rem; font-size:0.7rem; flex-wrap:wrap;">
+          <a href="${JIRA_BASE_URL}${c.id}" target="_blank" class="mono-id" style="font-size:0.7rem">${c.id}</a>
+          <span style="max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;" title="${c.resumo}">${c.resumo}</span>
+          <span class="badge ${rc}" style="font-size:0.65rem">${c.risco}</span>
+          <span style="color:var(--muted-fg); font-size:0.65rem">${c.status}</span>
+          <span style="color:var(--muted-fg); font-size:0.65rem">${fmtDate(c.criado)}</span>
+        </div>`;
       });
-      h+=`</div></td></tr>`;
+      
+      h+=`</div></div>   </td>  </tr>`;
     }
   });
-  h+=`</tbody></table></div>`;
+  
+  h+=`</tbody></div>`;
   if(reincidentes.length===0&&filtered.length>0)h+=`<p style="font-size:0.75rem;color:var(--muted-fg);margin-top:0.75rem;text-align:center">Nenhum reincidente encontrado. Mostrando todos os ${filtered.length} registros.</p>`;
-  panel.innerHTML=h;
+  panel.innerHTML = h;
+  
+  const newTableWrap = document.querySelector('#personPanel .table-wrap');
+  if (newTableWrap && scrollPosition > 0) {
+    setTimeout(() => {
+      newTableWrap.scrollTop = scrollPosition;
+    }, 10);
+  }
 }
 
-// ==================== TABLE ====================
 function renderTable(cases){
   const panel=document.getElementById('tablePanel');
-  const RISCO_ORDER={Alto:3,Médio:2,Baixo:1};const SLA_ORDER={breached:4,warning:3,ok:2,resolved:1};
+  const RISCO_ORDER={Alto:3,Médio:2,Baixo:1};
+  const SLA_ORDER = {breached:4, warning:3, ok:2, resolved:1};
+  
   const sorted=[...cases].sort((a,b)=>{
     let cmp=0;
     switch(tableSortField){
@@ -543,24 +1193,133 @@ function renderTable(cases){
   const arrow=f=>tableSortField===f?(tableSortDir==='desc'?'▼':'▲'):'⇅';
 
   let h=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem"><h3 class="chart-title" style="margin-bottom:0">Tabela Detalhada (${fmtNum(cases.length)} casos)</h3><div class="pagination">Pág. ${safePage+1} de ${totalPages} <button onclick="tablePage=Math.max(0,tablePage-1);renderAll()" ${safePage===0?'disabled':''}>‹</button><button onclick="tablePage=Math.min(${totalPages-1},tablePage+1);renderAll()" ${safePage>=totalPages-1?'disabled':''}>›</button></div></div>`;
-  h+=`<div class="table-wrap"><table class="data-table"><thead><tr>`;
+  h+=`<div class="table-wrap"><table class="data-table"><thead>`;
   cols.forEach(c=>{h+=`<th onclick="if(tableSortField==='${c.f}')tableSortDir=tableSortDir==='asc'?'desc':'asc';else{tableSortField='${c.f}';tableSortDir='desc'}tablePage=0;renderAll()">${c.l} <span style="opacity:0.5;font-size:10px">${arrow(c.f)}</span></th>`});
-  h+=`</tr></thead><tbody>`;
+  h+=`</thead><tbody>`;
 
   pageData.forEach(c=>{
-    const sla=getSlaStatus(c);const el=getSlaElapsed(c);const lim=getSlaDays(c.tipo);
+    const slaDisplay = getSlaDisplay(c);
     const rBadge=c.risco==='Alto'?'badge-risk-high':c.risco==='Médio'?'badge-risk-med':'badge-risk-low';
     const sBadge=isCoaf(c.status)?'badge-coaf':isOpen(c.status)?'badge-status-open':'badge-status-done';
-    let slaBadge;
-    if(sla==='resolved')slaBadge='<span class="badge badge-status-done">Concluído</span>';
-    else if(sla==='breached')slaBadge=`<span class="badge badge-risk-high">⚠ ${el}/${lim}d</span>`;
-    else if(sla==='warning')slaBadge=`<span class="badge badge-risk-med">⏳ ${el}/${lim}d</span>`;
-    else slaBadge=`<span class="badge badge-risk-low">✓ ${el!==null?el+'/'+lim+'d':'—'}</span>`;
-
-    h+=`<tr><td class="mono-id"><a href="${JIRA_BASE_URL}${c.id}" target="_blank">${c.id}</a></td><td>${c.tipo}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${(c.resumo||'').replace(/"/g,'&quot;')}">${c.resumo}</td><td><span class="badge ${sBadge}">${c.status}</span></td><td>${c.responsavel||'—'}</td><td><span class="badge ${rBadge}">${c.risco}</span></td><td>${slaBadge}</td><td>${fmtDate(c.data_transacao_pld)}</td><td>${fmtDate(c.criado)}</td><td>${fmtDate(c.resolvido)}</td></tr>`;
+    
+    h+=`<tr>
+      <td class="mono-id"><a href="${JIRA_BASE_URL}${c.id}" target="_blank">${c.id}</a></td>
+      <td>${c.tipo}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${(c.resumo||'').replace(/"/g,'&quot;')}">${c.resumo}</td>
+      <td><span class="badge ${sBadge}">${c.status}</span></td>
+      <td>${c.responsavel||'—'}</td>
+      <td><span class="badge ${rBadge}">${c.risco}</span></td>
+      <td><span class="badge ${slaDisplay.badge}" title="${slaDisplay.tooltip}">${slaDisplay.display}</span></td>
+      <td>${fmtDate(c.data_transacao_pld)}</td>
+      <td>${fmtDate(c.criado)}</td>
+      <td>${fmtDate(c.resolvido)}</td>
+    </tr>`;
   });
   h+=`</tbody></table></div>`;
   panel.innerHTML=h;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('globalSearch');
+  if(!input) return;
+
+  let debounce;
+  input.addEventListener('input', (e) => {
+    clearTimeout(debounce);
+    debounce = setTimeout(() => {
+      filters.text = e.target.value;
+      tablePage = 0;
+      const filtered = applyFilters(allCases, filters);
+      renderKPIs(filtered);
+      renderCharts(filtered);
+      renderSlaAlerts(filtered);
+      renderPersonPanel(filtered);
+      renderTable(filtered);
+      attachKpiCardGlow();
+    }, 300);
+  });
+});
+
+// Theme functions
+(function(){
+  const root = document.documentElement;
+  const btn = document.getElementById('themeToggle');
+  if (!btn) return;
+
+  function applyTheme(theme){
+    if(theme === 'dark'){
+      root.setAttribute('data-theme','dark');
+      btn.textContent = '☀️ Light mode';
+    } else {
+      root.removeAttribute('data-theme');
+      btn.textContent = '🌙 Dark mode';
+    }
+  }
+
+  let theme = localStorage.getItem('theme') || 'light';
+  applyTheme(theme);
+
+  btn.addEventListener('click', function(){
+  theme = theme === 'light' ? 'dark' : 'light';
+  localStorage.setItem('theme', theme);
+  applyTheme(theme);
+  if (typeof applyChartThemeColors === 'function') { applyChartThemeColors(); }
+  try { renderAll(); } catch(e) {}
+});
+})();
+
+const __makeChartDarkFix = makeChart;
+makeChart = function(canvasId, config){
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if(isDark && (canvasId === 'chTimeline' || canvasId === 'chRes')){
+    config.options = config.options || {};
+    config.options.plugins = config.options.plugins || {};
+    config.options.plugins.datalabels = { ...Chart.defaults.plugins.datalabels, color: '#e5e7eb' };
+  }
+  return __makeChartDarkFix(canvasId, config);
+};
+
+const __makeChartThemeAware = makeChart;
+makeChart = function(canvasId, config){
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if(canvasId === 'chTimeline' || canvasId === 'chRes'){
+    config.options = config.options || {};
+    config.options.plugins = config.options.plugins || {};
+    config.options.plugins.datalabels = { ...Chart.defaults.plugins.datalabels, color: isDark ? '#e5e7eb' : '#0f2a3d' };
+  }
+  return __makeChartThemeAware(canvasId, config);
+};
+
+function applyChartThemeColors(){
+  if (typeof Chart === 'undefined') return;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const textColor = isDark ? '#e5e7eb' : '#0f172a';
+  const gridColor = isDark ? 'rgba(148,163,184,0.25)' : 'rgba(100,116,139,0.25)';
+  Chart.defaults.color = textColor;
+  Chart.defaults.borderColor = gridColor;
+  Chart.defaults.plugins = Chart.defaults.plugins || {};
+  Chart.defaults.plugins.datalabels = { ...(Chart.defaults.plugins.datalabels || {}), color: textColor };
+  if (typeof chartInstances !== 'undefined' && chartInstances && chartInstances.length){
+    chartInstances.forEach((c)=>{
+      if (c.options && c.options.scales){
+        Object.values(c.options.scales).forEach((scale)=>{
+          scale.ticks = { ...(scale.ticks||{}), color: textColor };
+          scale.grid  = { ...(scale.grid||{}),  color: gridColor };
+        });
+      }
+      if (!c.options.plugins) c.options.plugins = {};
+      if (!c.options.plugins.legend) c.options.plugins.legend = {};
+      c.options.plugins.legend.labels = { ...(c.options.plugins.legend.labels||{}), color: textColor };
+      if (!c.options.plugins.datalabels) c.options.plugins.datalabels = {};
+      c.options.plugins.datalabels.color = textColor;
+      try { c.update(); } catch(e) {}
+    });
+  }
+}
+if (document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', applyChartThemeColors);
+} else {
+  applyChartThemeColors();
 }
 </script>
 </body>
