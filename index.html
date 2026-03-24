@@ -313,19 +313,46 @@ const STORAGE_KEY = "sla_completed_items";
 
 // ==================== STORAGE FUNCTIONS ====================
 let completedItems = new Set();
+let currentFileHash = null;
+
+function getFileHash(cases) {
+  const ids = cases.map(c => c.id).sort().join(',');
+  let hash = 0;
+  for (let i = 0; i < ids.length; i++) {
+    hash = ((hash << 5) - hash) + ids.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return hash.toString();
+}
 
 function loadCompletedItems() {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored) {
     try {
       const data = JSON.parse(stored);
-      completedItems = new Set(data);
-    } catch(e) {}
+      const newHash = getFileHash(allCases);
+      // Só carrega se o hash do arquivo salvo for igual ao atual
+      if (data.fileHash === newHash && data.items) {
+        completedItems = new Set(data.items);
+        console.log(`✅ Carregados ${completedItems.size} itens concluídos do storage`);
+      } else if (allCases.length > 0) {
+        completedItems.clear();
+        console.log("📁 Arquivo diferente, limpando itens concluídos");
+      }
+    } catch(e) { console.warn("Erro ao carregar storage:", e); }
   }
 }
 
 function saveCompletedItems() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...completedItems]));
+  try {
+    const data = {
+      fileHash: getFileHash(allCases),
+      items: [...completedItems],
+      timestamp: new Date().toISOString()
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    console.log(`💾 Salvos ${completedItems.size} itens concluídos no storage`);
+  } catch(e) { console.warn("Erro ao salvar storage:", e); }
 }
 
 function markAsDone(caseId) {
@@ -949,22 +976,21 @@ Chart.defaults.plugins.datalabels = {
 };
 
 // ==================== INIT ====================
-loadCompletedItems();
 document.getElementById('dateDisplay').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
 document.getElementById('uploadZone').addEventListener('click',()=>document.getElementById('fileInput').click());
 document.getElementById('fileInput').addEventListener('change',e=>{const f=e.target.files[0];if(f)loadFile(f);e.target.value=''});
 
 function handleDrop(e){e.preventDefault();const f=e.dataTransfer.files[0];if(f)loadFile(f)}
 function loadFile(file){
-  // Ao carregar nova planilha, limpar os itens concluídos (pois os IDs podem ser diferentes)
-  completedItems.clear();
-  saveCompletedItems();
-  
   const reader=new FileReader();
   reader.onload=ev=>{
     const data=new Uint8Array(ev.target.result);
     const wb=XLSX.read(data,{type:'array'});
     allCases=parseWorkbook(wb);
+    
+    // Carrega os itens concluídos baseado no hash do arquivo
+    loadCompletedItems();
+    
     const now=new Date(),ago=new Date(now);ago.setMonth(ago.getMonth()-3);
     filters={tipo:'',risco:'',responsavel:'',status:'',sla:'',text:'',dateFrom:ago.toISOString().slice(0,10),dateTo:now.toISOString().slice(0,10),transFrom:'',transTo:''};
     tablePage=0;
@@ -1254,7 +1280,7 @@ function renderPersonPanel(cases){
       <td><span class="badge ${rClass}">${p.riskLevel}</span></td>
       <td>${fmtDate(p.firstCaseDate)}</td>
       <td>${fmtDate(p.lastCaseDate)}</td>
-     </tr>`;
+    </tr>`;
     
     if(isExpanded){
       h+=`<tr class="expanded-row">
@@ -1334,10 +1360,10 @@ function renderTable(cases){
       <td>${c.responsavel||'—'}</td>
       <td><span class="badge ${rBadge}">${c.risco}</span></td>
       <td><span class="badge ${slaDisplay.badge}" title="${slaDisplay.tooltip}">${slaDisplay.display}</span></td>
-      <td>${fmtDate(c.data_transacao_pld)}</td>
-      <td>${fmtDate(c.criado)}</td>
-      <td>${fmtDate(c.resolvido)}</td>
-     </tr>`;
+      <td class="mono-id">${fmtDate(c.data_transacao_pld)}</td>
+      <td class="mono-id">${fmtDate(c.criado)}</td>
+      <td class="mono-id">${fmtDate(c.resolvido)}</td>
+    </tr>`;
   });
   h+=`</tbody></table></div>`;
   panel.innerHTML=h;
