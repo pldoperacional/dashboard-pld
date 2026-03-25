@@ -208,7 +208,7 @@ a:hover{color:var(--link-hover)}
   <div id="dateFilters" class="filters" style="display:none"></div>
   <div class="tabs-container">
     <button class="tab-btn active" data-tab="operacional"><span>Operacional</span></button>
-    <button class="tab-btn" data-tab="graficos"><span>Gráficos</span></button>
+    <button class="tab-btn" data-tab="graficos"><span>Gerencial</span></button>
 </div>
 <div id="tab-operacional" class="tab-content active">
     <div id="kpiGrid" class="kpi-grid"></div>
@@ -999,17 +999,17 @@ function updateComparisonCards(cases){
     const cardHtml = `
       <div class="kpi-card">
         <div class="kpi-value">${fmtNum(criadosAtual)}</div>
-        <div class="kpi-label">📝 Criados (${mesAtualNome})</div>
+        <div class="kpi-label">Criados (${mesAtualNome})</div>
         <div class="trend-value ${criadosClass}">${criadosVar} vs ${fmtNum(criadosAnterior)} em ${mesAnteriorNome}</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-value">${fmtNum(resolvidosAtual)}</div>
-        <div class="kpi-label">✅ Resolvidos (${mesAtualNome})</div>
+        <div class="kpi-label">Resolvidos (${mesAtualNome})</div>
         <div class="trend-value ${resolvidosClass}">${resolvidosVar} vs ${fmtNum(resolvidosAnterior)} em ${mesAnteriorNome}</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-value">${fmtNum(coafAtual)}</div>
-        <div class="kpi-label">🛡️ COAF (${mesAtualNome})</div>
+        <div class="kpi-label">COAF (${mesAtualNome})</div>
         <div class="trend-value ${coafClass}">${coafVar} vs ${fmtNum(coafAnterior)} em ${mesAnteriorNome}</div>
       </div>
     `;
