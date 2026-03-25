@@ -1026,17 +1026,17 @@ function updateComparisonCards(cases){
     const cardHtml = `
       <div class="kpi-card">
         <div class="kpi-value">${fmtNum(criadosAtual)}</div>
-        <div class="kpi-label">📝 Criados (${mesAtualNome})</div>
+        <div class="kpi-label">Criados (${mesAtualNome})</div>
         <div class="trend-value ${criadosClass}">${criadosVar} vs ${fmtNum(criadosAnterior)} em ${mesAnteriorNome}</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-value">${fmtNum(resolvidosAtual)}</div>
-        <div class="kpi-label">✅ Resolvidos (${mesAtualNome})</div>
+        <div class="kpi-label">Resolvidos (${mesAtualNome})</div>
         <div class="trend-value ${resolvidosClass}">${resolvidosVar} vs ${fmtNum(resolvidosAnterior)} em ${mesAnteriorNome}</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-value">${fmtNum(coafAtual)}</div>
-        <div class="kpi-label">🛡️ COAF (${mesAtualNome})</div>
+        <div class="kpi-label">COAF (${mesAtualNome})</div>
         <div class="trend-value ${coafClass}">${coafVar} vs ${fmtNum(coafAnterior)} em ${mesAnteriorNome}</div>
       </div>
     `;
