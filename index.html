@@ -280,7 +280,6 @@ a:hover{color:var(--link-hover)}
   z-index: 1001;
 }
 
-``
 .btn-clear-chart {
   height: 28px;
   padding: 0 10px;
@@ -338,7 +337,6 @@ a:hover{color:var(--link-hover)}
   color: var(--risk-high);
   border-color: var(--risk-high);
 }
-``
 
 
 </style>
@@ -1316,8 +1314,6 @@ const modalContent = modalCanvas.closest('.modal-content');
 modalContent.style.width = '90vw';
 modalContent.style.maxHeight = '90vh';
 modalContent.style.overflow = 'hidden';
-``
-
 
 modalChart = new Chart(modalCanvas, {
   type: chart.config.type,
@@ -1643,10 +1639,43 @@ function makeChart(canvasId,config){
 
 function renderCharts(cases){
   destroyCharts();
+  const grid=document.getElementById('chartsGrid');
   if (!hasChartLib()) {
     if (grid) grid.innerHTML = '<div class="chart-card"><h3 class="chart-title">Gráficos indisponíveis</h3><div style="color:var(--muted-fg);font-size:0.82rem;padding-top:0.35rem">A biblioteca de gráficos não carregou neste ambiente. Os dados e filtros continuam disponíveis.</div></div>';
     return;
   }
+
+  const darkenColor = (color, delta = 16) => {
+    const str = String(color || '');
+    const match = str.match(/hsla?\(([-\d.]+),\s*([\d.]+)%?,\s*([\d.]+)%?(?:,\s*([\d.]+))?\)/i);
+    if (!match) return color || 'hsl(215,18%,38%)';
+    const [, h, s, l, a] = match;
+    const nextL = Math.max(18, Number(l) - delta);
+    return str.startsWith('hsla') ? `hsla(${h},${s}%,${nextL}%,${a ?? 1})` : `hsl(${h},${s}%,${nextL}%)`;
+  };
+
+  const readableText = (color) => {
+    const str = String(color || '');
+    const match = str.match(/hsla?\(([-\d.]+),\s*([\d.]+)%?,\s*([\d.]+)%?(?:,\s*([\d.]+))?\)/i);
+    if (!match) return '#ffffff';
+    return Number(match[3]) >= 60 ? '#111827' : '#ffffff';
+  };
+
+  const badgeLabels = (bgGetter, extra = {}) => ({
+    display: true,
+    borderRadius: 6,
+    padding: { top: 2, right: 6, bottom: 2, left: 6 },
+    font: { size: 11, weight: '700' },
+    formatter: (v) => v > 0 ? v : '',
+    clamp: true,
+    backgroundColor: (ctx) => typeof bgGetter === 'function' ? bgGetter(ctx) : bgGetter,
+    color: (ctx) => {
+      const bg = typeof bgGetter === 'function' ? bgGetter(ctx) : bgGetter;
+      return readableText(bg);
+    },
+    ...extra
+  });
+
   const tipoCount={};cases.forEach(c=>tipoCount[c.tipo]=(tipoCount[c.tipo]||0)+1);
   const riscoCount={};cases.forEach(c=>riscoCount[c.risco]=(riscoCount[c.risco]||0)+1);
   const timeline=getTimeline(cases);
@@ -1658,13 +1687,12 @@ function renderCharts(cases){
     const s=getSlaStatus(c);
     if(s==='breached')breached++;
     else if(s==='warning')warning++;
-    else ok++
+    else ok++;
   });
   const statusD={open:cases.filter(c=>isOpen(c.status)).length,coaf:cases.filter(c=>isCoaf(c.status)).length,closed:cases.filter(c=>!isOpen(c.status)&&!isCoaf(c.status)).length};
   const resTrend=getResTrend(cases);
   const cohort=getResolutionCohort(cohortCases);
 
-  const grid=document.getElementById('chartsGrid');
   grid.innerHTML=`
     <div class="chart-card"><h3 class="chart-title">Casos por Tipo</h3><canvas id="chTipo" height="80"></canvas></div>
     <div class="chart-card"><h3 class="chart-title">Distribuição de Risco</h3><canvas id="chRisco" height="80"></canvas></div>
@@ -1677,132 +1705,129 @@ function renderCharts(cases){
   `;
 
   const tipoLabels=Object.keys(tipoCount);
-  makeChart('chTipo',{type:'bar',data:{labels:tipoLabels,datasets:[{data:tipoLabels.map(t=>tipoCount[t]),backgroundColor:tipoLabels.map(t=>TIPO_COLORS[t]||'#94a3b8')}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:11}}},y:{ticks:{font:{size:10}}}}}});
+  makeChart('chTipo',{type:'bar',data:{labels:tipoLabels,datasets:[{data:tipoLabels.map(t=>tipoCount[t]),backgroundColor:tipoLabels.map(t=>TIPO_COLORS[t]||'#94a3b8')}]},options:{indexAxis:'y',plugins:{legend:{display:false},datalabels:badgeLabels((ctx)=>darkenColor(ctx.dataset.backgroundColor[ctx.dataIndex]),{anchor:'end',align:'right',offset:4})},scales:{x:{ticks:{font:{size:11}}},y:{ticks:{font:{size:10}}}}}});
 
   const rLabels=Object.keys(riscoCount);
-makeChart('chRisco',{type:'bar',data:{labels:rLabels,datasets:[{data:rLabels.map(r=>riscoCount[r]),backgroundColor:rLabels.map(r=>RISCO_COLORS[r]||'#94a3b8')}]},options:{plugins:{legend:{display:false}}}});
+  makeChart('chRisco',{type:'bar',data:{labels:rLabels,datasets:[{data:rLabels.map(r=>riscoCount[r]),backgroundColor:rLabels.map(r=>RISCO_COLORS[r]||'#94a3b8')}]},options:{plugins:{legend:{display:false},datalabels:badgeLabels((ctx)=>darkenColor(ctx.dataset.backgroundColor[ctx.dataIndex]),{anchor:'end',align:'end',offset:4})}}});
 
-makeChart('chTimeline',{type:'line',data:{labels:timeline.map(t=>t.month),datasets:[{label:'Criados',data:timeline.map(t=>t.criados),borderColor:'hsl(217,60%,62%)',backgroundColor:'hsla(217,60%,62%,0.15)',fill:true,tension:0.3},{label:'Resolvidos',data:timeline.map(t=>t.resolvidos),borderColor:'hsl(142,45%,55%)',backgroundColor:'hsla(142,45%,55%,0.14)',fill:true,tension:0.3},{label:'COAF',data:timeline.map(t=>t.coaf),borderColor:'hsl(263,45%,64%)',backgroundColor:'hsla(263,45%,64%,0.15)',fill:true,tension:0.3}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
+  makeChart('chTimeline',{type:'line',data:{labels:timeline.map(t=>t.month),datasets:[{label:'Criados',data:timeline.map(t=>t.criados),borderColor:'hsl(217,60%,62%)',backgroundColor:'hsla(217,60%,62%,0.15)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(217,60%,62%)'),{anchor:'end',align:'top',offset:4})},{label:'Resolvidos',data:timeline.map(t=>t.resolvidos),borderColor:'hsl(142,45%,55%)',backgroundColor:'hsla(142,45%,55%,0.14)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(142,45%,55%)'),{anchor:'end',align:'top',offset:4})},{label:'COAF',data:timeline.map(t=>t.coaf),borderColor:'hsl(263,45%,64%)',backgroundColor:'hsla(263,45%,64%,0.15)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(263,45%,64%)'),{anchor:'end',align:'top',offset:4})}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
 
-if(cohort.length){
-makeChart('chCohort',{
-  type:'bar',
-  data:{
-    labels:cohort.map(t=>t.monthLabel),
-    datasets:[
-      {
-        label:'Resolvidos no mesmo mês',
-        data:cohort.map(t=>t.sameMonth),
-        backgroundColor:'hsl(142,45%,55%)',
-        stack:'cohort',
-        datalabels:{
-          color:'#ffffff',
-          backgroundColor:'hsl(142,45%,38%)',
-          borderRadius:6,
-          padding:{top:2,right:6,bottom:2,left:6},
-          font:{size:11,weight:'700'},
-          formatter:(v)=>v>0?v:'',
-          anchor:'center',
-          align:'center',
-          clamp:true
-        }
-      },
-      {
-        label:'Resolvidos no mês seguinte',
-        data:cohort.map(t=>t.nextMonth),
-        backgroundColor:'hsl(38,90%,62%)',
-        stack:'cohort',
-        datalabels:{
-          color:'#111827',
-          backgroundColor:'hsl(38,88%,48%)',
-          borderRadius:6,
-          padding:{top:2,right:6,bottom:2,left:6},
-          font:{size:11,weight:'700'},
-          formatter:(v)=>v>0?v:'',
-          anchor:'center',
-          align:'center',
-          clamp:true
-        }
-      },
-      {
-        label:'Resolvidos depois / em aberto',
-        data:cohort.map(t=>t.otherOrOpen),
-        backgroundColor:'hsla(215,20%,65%,0.85)',
-        stack:'cohort',
-        datalabels:{
-          color:'#ffffff',
-          backgroundColor:'hsl(215,18%,38%)',
-          borderRadius:6,
-          padding:{top:2,right:6,bottom:2,left:6},
-          font:{size:11,weight:'700'},
-          formatter:(v)=>v>0?v:'',
-          anchor:'center',
-          align:'center',
-          clamp:true
-        }
-      },
-      {
-        label:'Total da safra',
-        data:cohort.map(t=>t.total),
-        backgroundColor:'rgba(0,0,0,0)',
-        borderWidth:0,
-        stack:'totals',
-        datalabels:{
-          color:'#ffffff',
-          backgroundColor:'hsl(217,60%,42%)',
-          borderRadius:6,
-          padding:{top:2,right:6,bottom:2,left:6},
-          font:{size:11,weight:'700'},
-          formatter:(v)=>v>0?`Total ${v}`:'',
-          anchor:'end',
-          align:'end',
-          offset:4,
-          clip:false
-        }
-      }
-    ]
-  },
-  options:{
-    plugins:{
-      legend:{position:'bottom',labels:{font:{size:11}}},
-      tooltip:{
-        callbacks:{
-          afterBody(items){
-            const i = items[0]?.dataIndex ?? 0;
-            const row = cohort[i];
-            if(!row) return '';
-            return [
-              `Criados na safra: ${row.total}`,
-              `Resolvidos no mesmo mês: ${row.sameMonth}`,
-              `Resolvidos no mês seguinte: ${row.nextMonth}`,
-              `Resolvidos depois / em aberto: ${row.otherOrOpen}`,
-              'Referência: Data Combinada (Transação+Criação)'
-            ];
+  if(cohort.length){
+    makeChart('chCohort',{
+      type:'bar',
+      data:{
+        labels:cohort.map(t=>t.monthLabel),
+        datasets:[
+          {
+            label:'Resolvidos no mesmo mês',
+            data:cohort.map(t=>t.sameMonth),
+            backgroundColor:'hsl(142,45%,55%)',
+            stack:'cohort',
+            datalabels:{
+              color:'#ffffff',
+              backgroundColor:'hsl(142,45%,38%)',
+              borderRadius:6,
+              padding:{top:2,right:6,bottom:2,left:6},
+              font:{size:11,weight:'700'},
+              formatter:(v)=>v>0?v:'',
+              anchor:'center',
+              align:'center',
+              clamp:true
+            }
+          },
+          {
+            label:'Resolvidos no mês seguinte',
+            data:cohort.map(t=>t.nextMonth),
+            backgroundColor:'hsl(38,90%,62%)',
+            stack:'cohort',
+            datalabels:{
+              color:'#111827',
+              backgroundColor:'hsl(38,88%,48%)',
+              borderRadius:6,
+              padding:{top:2,right:6,bottom:2,left:6},
+              font:{size:11,weight:'700'},
+              formatter:(v)=>v>0?v:'',
+              anchor:'center',
+              align:'center',
+              clamp:true
+            }
+          },
+          {
+            label:'Resolvidos depois / em aberto',
+            data:cohort.map(t=>t.otherOrOpen),
+            backgroundColor:'hsla(215,20%,65%,0.85)',
+            stack:'cohort',
+            datalabels:{
+              color:'#ffffff',
+              backgroundColor:'hsl(215,18%,38%)',
+              borderRadius:6,
+              padding:{top:2,right:6,bottom:2,left:6},
+              font:{size:11,weight:'700'},
+              formatter:(v)=>v>0?v:'',
+              anchor:'center',
+              align:'center',
+              clamp:true
+            }
+          },
+          {
+            label:'Total da safra',
+            data:cohort.map(t=>t.total),
+            backgroundColor:'rgba(0,0,0,0)',
+            borderWidth:0,
+            stack:'totals',
+            datalabels:{
+              color:'#ffffff',
+              backgroundColor:'hsl(217,60%,42%)',
+              borderRadius:6,
+              padding:{top:2,right:6,bottom:2,left:6},
+              font:{size:11,weight:'700'},
+              formatter:(v)=>v>0?`Total ${v}`:'',
+              anchor:'end',
+              align:'end',
+              offset:4,
+              clip:false
+            }
           }
+        ]
+      },
+      options:{
+        plugins:{
+          legend:{position:'bottom',labels:{font:{size:11},generateLabels(chart){const labels=Chart.defaults.plugins.legend.labels.generateLabels(chart);return labels.map(label=>label.text==='Total da safra'?{...label,fillStyle:'hsl(217,60%,42%)',strokeStyle:'hsl(217,60%,42%)',lineWidth:0}:label);}}},
+          tooltip:{
+            callbacks:{
+              afterBody(items){
+                const i = items[0]?.dataIndex ?? 0;
+                const row = cohort[i];
+                if(!row) return '';
+                return [
+                  `Criados na safra: ${row.total}`,
+                  `Resolvidos no mesmo mês: ${row.sameMonth}`,
+                  `Resolvidos no mês seguinte: ${row.nextMonth}`,
+                  `Resolvidos depois / em aberto: ${row.otherOrOpen}`,
+                  'Referência: Data Combinada (Transação+Criação)'
+                ];
+              }
+            }
+          }
+        },
+        scales:{
+          x:{stacked:true,ticks:{font:{size:10}}},
+          y:{stacked:true,beginAtZero:true,ticks:{font:{size:11}}}
         }
       }
-    },
-    scales:{
-      x:{stacked:true,ticks:{font:{size:10}}},
-      y:{stacked:true,beginAtZero:true,ticks:{font:{size:11}}}
+    });
+  } else {
+    const cohortCanvas = document.getElementById('chCohort');
+    if (cohortCanvas) {
+      const card = cohortCanvas.closest('.chart-card');
+      if (card) card.innerHTML = '<h3 class="chart-title">Safra de Resolução — Total, Mesmo Mês e Mês Seguinte</h3><div style="color:var(--muted-fg);font-size:0.8rem;padding:1rem 0">Nenhum caso encontrado para o filtro específico da safra.</div>';
     }
   }
-});
-} else {
-  const cohortCanvas = document.getElementById('chCohort');
-  if (cohortCanvas) {
-    const card = cohortCanvas.closest('.chart-card');
-    if (card) card.innerHTML = '<h3 class="chart-title">Safra de Resolução — Total, Mesmo Mês e Mês Seguinte</h3><div style="color:var(--muted-fg);font-size:0.8rem;padding:1rem 0">Nenhum caso encontrado para o filtro específico da safra.</div>';
-  }
-}
 
-  makeChart('chWorkload',{type:'bar',data:{labels:wlSorted.map(w=>w[0].split(' ').slice(0,2).join(' ')),datasets:[{data:wlSorted.map(w=>w[1]),backgroundColor:'hsla(215,35%,62%,0.60)'}]},options:{plugins:{legend:{display:false},datalabels:{display:true}},scales:{x:{ticks:{font:{size:9},maxRotation:20}},y:{ticks:{font:{size:11}}}}}});
-
-makeChart('chSla',{type:'bar',data:{labels:['Estourado','Em Risco','No Prazo'],datasets:[{data:[breached,warning,ok],backgroundColor:['hsl(0,70%,60%)','hsl(38,90%,62%)','hsl(142,45%,55%)']}]},options:{plugins:{legend:{display:false}}}});
-
-  makeChart('chStatus',{type:'bar',data:{labels:['Abertos','COAF','Concluídos'],datasets:[{data:[statusD.open,statusD.coaf,statusD.closed],backgroundColor:['hsl(217,60%,62%)','hsl(263,45%,64%)','hsl(142,45%,55%)']}]},options:{plugins:{legend:{display:false}}}});
-
-  makeChart('chRes',{type:'line',data:{labels:resTrend.map(r=>r.month),datasets:[{label:'Dias',data:resTrend.map(r=>r.avg),borderColor:'hsl(263,45%,64%)',backgroundColor:'hsl(263,45%,64%)',pointRadius:3,tension:0.3}]},options:{plugins:{legend:{display:false},datalabels:{display:true}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
+  makeChart('chWorkload',{type:'bar',data:{labels:wlSorted.map(w=>w[0].split(' ').slice(0,2).join(' ')),datasets:[{data:wlSorted.map(w=>w[1]),backgroundColor:'hsla(215,35%,62%,0.60)'}]},options:{plugins:{legend:{display:false},datalabels:badgeLabels(()=>darkenColor('hsl(215,35%,62%)'),{anchor:'end',align:'end',offset:4})},scales:{x:{ticks:{font:{size:9},maxRotation:20}},y:{ticks:{font:{size:11}}}}}});
+  makeChart('chSla',{type:'bar',data:{labels:['Estourado','Em Risco','No Prazo'],datasets:[{data:[breached,warning,ok],backgroundColor:['hsl(0,70%,60%)','hsl(38,90%,62%)','hsl(142,45%,55%)']}]},options:{plugins:{legend:{display:false},datalabels:badgeLabels((ctx)=>darkenColor(ctx.dataset.backgroundColor[ctx.dataIndex]),{anchor:'end',align:'end',offset:4})}}});
+  makeChart('chStatus',{type:'bar',data:{labels:['Abertos','COAF','Concluídos'],datasets:[{data:[statusD.open,statusD.coaf,statusD.closed],backgroundColor:['hsl(217,60%,62%)','hsl(263,45%,64%)','hsl(142,45%,55%)']}]},options:{plugins:{legend:{display:false},datalabels:badgeLabels((ctx)=>darkenColor(ctx.dataset.backgroundColor[ctx.dataIndex]),{anchor:'end',align:'end',offset:4})}}});
+  makeChart('chRes',{type:'line',data:{labels:resTrend.map(r=>r.month),datasets:[{label:'Dias',data:resTrend.map(r=>r.avg),borderColor:'hsl(263,45%,64%)',backgroundColor:'hsl(263,45%,64%)',pointRadius:3,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(263,45%,64%)'),{anchor:'end',align:'top',offset:4})}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
 }
 
 function getTimeline(cases){
@@ -1968,7 +1993,7 @@ function renderPersonPanel(cases){
     }
   });
   
-  h+=`</tbody></div>`;
+  h+=`</tbody></table></div>`;
   if(reincidentes.length===0&&filtered.length>0)h+=`<p style="font-size:0.75rem;color:var(--muted-fg);margin-top:0.75rem;text-align:center">Nenhum reincidente encontrado. Mostrando todos os ${filtered.length} registros.</p>`;
   panel.innerHTML = h;
   
