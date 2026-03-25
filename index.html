@@ -198,7 +198,7 @@ a:hover{color:var(--link-hover)}
   <div id="dateFilters" class="filters" style="display:none"></div>
   <div class="tabs-container">
     <button class="tab-btn active" data-tab="operacional"><span>Operacional</span></button>
-    <button class="tab-btn" data-tab="graficos"><span>Visão</span></button>
+    <button class="tab-btn" data-tab="graficos"><span>Gráficos</span></button>
 </div>
 <div id="tab-operacional" class="tab-content active">
     <div id="kpiGrid" class="kpi-grid"></div>
@@ -611,87 +611,87 @@ function parseWorkbook(wb){
 
 // ==================== PERSON CORRELATION ====================
 function buildPersonCorrelations(cases) {
-  const people = new Map();          
-  const emailToCpf = new Map();      
-
-  function getOrCreateCPF(cpf) {
-    if (!people.has(cpf)) {
-      people.set(cpf, {
-        identifier: cpf,
-        type: 'cpf',
-        cases: [],
-        emails: new Set()
-      });
-    }
-    return people.get(cpf);
-  }
-
-  function getOrCreateEmail(email) {
-    if (!people.has(email)) {
-      people.set(email, {
-        identifier: email,
-        type: 'email',
-        cases: []
-      });
-    }
-    return people.get(email);
-  }
-
+  // Mapa para agrupar por identificador principal (CPF ou email)
+  const groups = new Map();
+  // Mapeamento de email para CPF
+  const emailToCpf = new Map();
+  // Mapeamento de CPF para emails
+  const cpfToEmails = new Map();
+  
+  // Primeira passagem: identificar relações entre CPF e email
   for (const c of cases) {
     const cpf = extractCPF(c.resumo);
     const email = c.emailP || extractEmail(c.resumo);
-
-    if (cpf && email) {
-      const person = getOrCreateCPF(cpf);
-      person.cases.push(c);
-      person.emails.add(email);
-      emailToCpf.set(email, cpf);
-      continue;
-    }
-
+    
     if (cpf) {
-      getOrCreateCPF(cpf).cases.push(c);
-      continue;
-    }
-
-    if (email) {
-      if (emailToCpf.has(email)) {
-        people.get(emailToCpf.get(email)).cases.push(c);
-      } else {
-        getOrCreateEmail(email).cases.push(c);
+      if (!cpfToEmails.has(cpf)) cpfToEmails.set(cpf, new Set());
+      if (email) {
+        cpfToEmails.get(cpf).add(email);
+        emailToCpf.set(email, cpf);
       }
     }
   }
-
+  
+  // Segunda passagem: agrupar casos
+  for (const c of cases) {
+    const cpf = extractCPF(c.resumo);
+    const email = c.emailP || extractEmail(c.resumo);
+    
+    let mainId = null;
+    
+    if (cpf) {
+      mainId = cpf;
+    } else if (email && emailToCpf.has(email)) {
+      mainId = emailToCpf.get(email);
+    } else if (email) {
+      mainId = email;
+    }
+    
+    if (mainId) {
+      if (!groups.has(mainId)) {
+        groups.set(mainId, {
+          identifier: mainId,
+          type: (cpf && mainId === cpf) ? 'cpf' : 'email',
+          cases: [],
+          emails: new Set(),
+          cpfs: new Set()
+        });
+      }
+      const group = groups.get(mainId);
+      group.cases.push(c);
+      if (email) group.emails.add(email);
+      if (cpf) group.cpfs.add(cpf);
+    }
+  }
+  
   const sixAgo = new Date();
   sixAgo.setMonth(sixAgo.getMonth() - 6);
-
   const corr = [];
-
-  for (const person of people.values()) {
-    const casesList = person.cases;
+  
+  for (const group of groups.values()) {
+    const casesList = group.cases;
     if (!casesList.length) continue;
-
+    
     const open = casesList.filter(c => isOpen(c.status)).length;
     const closed = casesList.filter(c => !isOpen(c.status) && !isCoaf(c.status)).length;
     const coafCases = casesList.filter(c => isCoaf(c.status));
     const hiCount = casesList.filter(c => c.risco === "Alto").length;
-
-    const allDates = casesList
-      .map(c => c.criado)
-      .filter(Boolean)
-      .map(d => new Date(d))
-      .sort((a, b) => a - b);
-
-    const coafDates = coafCases
-      .map(c => c.atualizado || c.criado)
-      .filter(Boolean)
-      .map(d => new Date(d))
-      .sort((a, b) => b - a);
-
+    
+    const allDates = casesList.map(c => c.criado).filter(Boolean).map(d => new Date(d)).sort((a, b) => a - b);
+    const coafDates = coafCases.map(c => c.atualizado || c.criado).filter(Boolean).map(d => new Date(d)).sort((a, b) => b - a);
+    
+    // Para exibição: priorizar email se disponível (fica mais legível)
+    let displayId = group.identifier;
+    let displayType = group.type;
+    if (group.emails.size > 0 && group.type === 'cpf') {
+      displayId = Array.from(group.emails)[0];
+      displayType = 'email';
+    }
+    
     corr.push({
-      identifier: person.identifier,
-      type: person.type,
+      identifier: displayId,
+      originalIdentifier: group.identifier,
+      type: displayType,
       totalCases: casesList.length,
       openCases: open,
       closedCases: closed,
@@ -699,17 +699,12 @@ function buildPersonCorrelations(cases) {
       coafInLast6Months: coafDates.some(d => d >= sixAgo),
       lastCoafDate: coafDates.length ? coafDates[0].toISOString() : null,
       cases: casesList,
-      riskLevel:
-        hiCount > casesList.length / 2
-          ? "Alto"
-          : casesList.some(c => c.risco === "Médio")
-          ? "Médio"
-          : "Baixo",
+      riskLevel: hiCount > casesList.length / 2 ? "Alto" : casesList.some(c => c.risco === "Médio") ? "Médio" : "Baixo",
       firstCaseDate: allDates.length ? allDates[0].toISOString() : null,
       lastCaseDate: allDates.length ? allDates[allDates.length - 1].toISOString() : null
     });
   }
-
+  
   return corr.sort((a, b) => b.totalCases - a.totalCases);
 }
 
