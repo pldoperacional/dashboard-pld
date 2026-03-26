@@ -1827,7 +1827,7 @@ function renderCharts(cases){
   const rLabels=Object.keys(riscoCount);
   makeChart('chRisco',{type:'bar',data:{labels:rLabels,datasets:[{data:rLabels.map(r=>riscoCount[r]),backgroundColor:rLabels.map(r=>RISCO_COLORS[r]||'#94a3b8')}]},options:{plugins:{legend:{display:false},datalabels:badgeLabels((ctx)=>darkenColor(ctx.dataset.backgroundColor[ctx.dataIndex]),{anchor:'end',align:'end',offset:4})}}});
 
-  makeChart('chTimeline',{type:'line',data:{labels:timeline.map(t=>t.month),datasets:[{label:'Criados',data:timeline.map(t=>t.criados),borderColor:'hsl(217,60%,62%)',backgroundColor:'hsla(217,60%,62%,0.15)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(217,60%,62%)'),{anchor:'end',align:'top',offset:4})},{label:'Resolvidos',data:timeline.map(t=>t.resolvidos),borderColor:'hsl(142,45%,55%)',backgroundColor:'hsla(142,45%,55%,0.14)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(142,45%,55%)'),{anchor:'end',align:'top',offset:4})},{label:'COAF',data:timeline.map(t=>t.coaf),borderColor:'hsl(263,45%,64%)',backgroundColor:'hsla(263,45%,64%,0.15)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(263,45%,64%)'),{anchor:'end',align:'top',offset:4})}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
+  makeChart('chTimeline',{type:'line',data:{labels:timeline.map(t=>t.month),datasets:[{label:'Casos (Data Combinada)',data:timeline.map(t=>t.criados),borderColor:'hsl(217,60%,62%)',backgroundColor:'hsla(217,60%,62%,0.15)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(217,60%,62%)'),{anchor:'end',align:'top',offset:4})},{label:'Resolvidos',data:timeline.map(t=>t.resolvidos),borderColor:'hsl(142,45%,55%)',backgroundColor:'hsla(142,45%,55%,0.14)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(142,45%,55%)'),{anchor:'end',align:'top',offset:4})},{label:'COAF',data:timeline.map(t=>t.coaf),borderColor:'hsl(263,45%,64%)',backgroundColor:'hsla(263,45%,64%,0.15)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(263,45%,64%)'),{anchor:'end',align:'top',offset:4})}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
 
   if(cohort.length){
     makeChart('chCohort',{
@@ -1951,11 +1951,30 @@ function renderCharts(cases){
 function getTimeline(cases){
   const m=new Map();
   cases.forEach(c=>{
-    if(c.criado){const d=new Date(c.criado);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const e=m.get(k)||{criados:0,resolvidos:0,coaf:0};e.criados++;m.set(k,e)}
-    if(c.resolvido){const d=new Date(c.resolvido);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const e=m.get(k)||{criados:0,resolvidos:0,coaf:0};e.resolvidos++;m.set(k,e)}
-    if(isCoaf(c.status)&&c.atualizado){const d=new Date(c.atualizado);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const e=m.get(k)||{criados:0,resolvidos:0,coaf:0};e.coaf++;m.set(k,e)}
+    const ref = getCombinedDate(c);
+    if(ref){
+      const d=new Date(ref);
+      const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+      const e=m.get(k)||{criados:0,resolvidos:0,coaf:0};
+      e.criados++;
+      m.set(k,e);
+    }
+    if(c.resolvido){
+      const d=new Date(c.resolvido);
+      const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+      const e=m.get(k)||{criados:0,resolvidos:0,coaf:0};
+      e.resolvidos++;
+      m.set(k,e);
+    }
+    if(isCoaf(c.status) && c.atualizado){
+      const d=new Date(c.atualizado);
+      const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+      const e=m.get(k)||{criados:0,resolvidos:0,coaf:0};
+      e.coaf++;
+      m.set(k,e);
+    }
   });
-  return[...m.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([month,d])=>({month,...d}));
+  return [...m.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([month,d])=>({month,...d}));
 }
 function getResTrend(cases){
   const resolved=cases.filter(c=>c.criado&&c.resolvido);const m=new Map();
