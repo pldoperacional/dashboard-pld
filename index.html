@@ -13,7 +13,7 @@
 :root{
   --background: hsl(220,20%,96%); --foreground: hsl(215,30%,15%);
   --card: hsl(0,0%,100%); --card-fg: hsl(215,30%,15%);
-  --primary: hsl(215,50%,23%); --primary-fg: hsl(210,40%,98%);
+  --primary: hsl(217,45%,20%); --primary-fg: hsl(210,40%,98%);
   --muted: hsl(215,20%,92%); --muted-fg: hsl(215,15%,47%);
   --border: hsl(215,25%,90%);
   --risk-high: hsl(0,78%,47%); --risk-high-bg: hsl(0,100%,90%);
@@ -37,13 +37,21 @@
   --btn-undone-bg: hsl(0,70%,55%);
   --btn-undone-hover: hsl(0,70%,45%);
   --tab-active: hsl(215,50%,23%);
-  --trend-up: hsl(142,55%,45%);
-  --trend-down: hsl(0,70%,55%);
-  --trend-stable: hsl(38,85%,50%);
+  --trend-up: hsl(142,65%,28%);
+  --trend-down: hsl(0,72%,36%);
+  --trend-stable: hsl(38,90%,32%);
   --update-badge-bg: #c8e6c9;
   --update-badge-color: #1b5e20;
   --update-badge-warning-bg: #ffcdd2;
   --update-badge-warning-color: #b71c1c;
+
+  /* badges de tendência - modo claro */
+  --trend-badge-up-bg: rgba(255,107,79,0.14);
+  --trend-badge-up-text: #7a1a06;
+  --trend-badge-down-bg: rgba(67,181,129,0.14);
+  --trend-badge-down-text: #094d26;
+  --trend-badge-flat-bg: rgba(232,181,55,0.14);
+  --trend-badge-flat-text: #7a4d00;
 }
 body{font-family:'Inter',sans-serif;background:var(--background);color:var(--foreground);-webkit-font-smoothing:antialiased}
 .container{max-width:1400px;margin:0 auto;padding:0 1rem}
@@ -60,10 +68,27 @@ main{padding:1.5rem 0}main>*+*{margin-top:1.5rem}
 .filter-select,.filter-input{height:36px;border:1px solid var(--border);border-radius:8px;padding:0 0.75rem;font-size:0.75rem;background:var(--card);outline:none}
 .filter-select:focus,.filter-input:focus{border-color:var(--link-color)}
 
-.tab-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.5rem;font-size:0.875rem;font-weight:600;background:transparent;border:none;cursor:pointer;border-radius:8px 8px 0 0;transition:all 0.2s;color:var(--muted-fg)}
+.tab-btn {
+  appearance:none;
+  border:1px solid transparent;
+  border-bottom:none !important;
+  background:transparent;
+  color:var(--muted-fg);
+  padding:.8rem 1.25rem;
+  border-radius:8px 8px 0 0;
+  font-weight:700;
+  cursor:pointer;
+  margin-bottom:-2px;
+  transition:all .18s ease;
+}
 .tab-btn svg{width:18px;height:18px;stroke-width:1.8}
 .tab-btn:hover{background:var(--muted);color:var(--foreground)}
-.tab-btn.active{background:var(--tab-active);color:white}
+.tab-btn.active {
+  background:hsl(217,45%,38%);
+  color:#ffffff;
+  border-color:hsl(217,35%,32%);
+  box-shadow:inset 0 -1px 0 hsl(217,45%,38%);
+}
 .tab-btn.active svg{stroke:white}
 .tab-content{display:none}
 .tab-content.active{display:block}
@@ -134,7 +159,14 @@ table.data-table{width:100%;font-size:0.75rem;border-collapse:collapse;table-lay
 .mini-kpi .lbl{font-size:0.75rem;color:var(--muted-fg);margin-top:2px}
 .expanded-cases{background:hsla(215,20%,92%,0.3);padding:0.75rem;margin:0 0.5rem 0.5rem;border-radius:8px}
 footer{border-top:1px solid var(--border);padding:1rem 0 2rem;text-align:center;font-size:0.75rem;color:var(--muted-fg)}
-[data-theme='dark']{--background:hsl(220,15%,12%);--foreground:hsl(220,15%,92%);--card:hsl(220,15%,16%);--card-fg:hsl(220,15%,92%);--muted:hsl(220,10%,22%);--muted-fg:hsl(220,10%,70%);--border:hsl(220,10%,28%);--link-color:hsl(215,85%,72%);--link-hover:hsl(215,90%,78%);--btn-clear-all-bg:hsl(215,25%,22%);--btn-clear-all-fg:hsl(215,80%,85%);--btn-clear-dates-bg:hsl(26,35%,24%);--btn-clear-dates-fg:hsl(26,85%,85%);--btn-hover-shadow:0 1px 2px rgba(0,0,0,.35);--btn-done-bg:hsl(142,35%,35%);--btn-done-hover:hsl(142,35%,45%);--btn-undone-bg:hsl(0,60%,45%);--btn-undone-hover:hsl(0,60%,55%);--tab-active:hsl(215,50%,35%)}
+[data-theme='dark']{--background:hsl(218,28%,10%);--foreground:hsl(215,25%,90%);--card:hsl(218,28%,14%);--card-fg:hsl(215,25%,90%);--muted:hsl(218,22%,20%);--muted-fg:hsl(218,15%,65%);--border:hsl(218,20%,24%);--link-color:hsl(215,85%,72%);--link-hover:hsl(215,90%,78%);--btn-clear-all-bg:hsl(215,25%,22%);--btn-clear-all-fg:hsl(215,80%,85%);--btn-clear-dates-bg:hsl(26,35%,24%);--btn-clear-dates-fg:hsl(26,85%,85%);--btn-hover-shadow:0 1px 2px rgba(0,0,0,.35);--btn-done-bg:hsl(142,35%,35%);--btn-done-hover:hsl(142,35%,45%);--btn-undone-bg:hsl(0,60%,45%);--btn-undone-hover:hsl(0,60%,55%);--tab-active:hsl(217,55%,38%);
+  --trend-badge-up-bg: rgba(255,107,79,0.2);
+  --trend-badge-up-text: #ffd9cf;
+  --trend-badge-down-bg: rgba(67,181,129,0.2);
+  --trend-badge-down-text: #d6ffe1;
+  --trend-badge-flat-bg: rgba(232,181,55,0.2);
+  --trend-badge-flat-text: #fef3c7;
+}
 [data-theme='dark'] .expanded-cases{background:var(--card)}
 .btn-mono{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--muted-fg);cursor:pointer}
 .btn-mono:hover{color:var(--foreground)}
@@ -255,12 +287,44 @@ a:hover{color:var(--link-hover)}
   max-height: 90vh;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 
 #modalCanvas {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
+  min-height: 340px;
+  max-height: 65vh;
 }
 
+
+#modalSummaryTable {
+  margin-top: 1rem;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 220px;
+  flex-shrink: 0;
+}
+#modalSummaryTable table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+#modalSummaryTable table td,
+#modalSummaryTable table th {
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  text-align: center;
+}
+#modalSummaryTable table th:first-child,
+#modalSummaryTable table td:first-child {
+  text-align: left;
+}
+#modalSummaryTable table thead tr {
+  background: var(--muted);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
 
 #modalDataBox {
   position: absolute;
@@ -338,6 +402,22 @@ a:hover{color:var(--link-hover)}
   border-color: var(--risk-high);
 }
 
+/* Bordas nas tabelas de summary dos gráficos */
+.chart-card table td,
+.chart-card table th {
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+}
+.chart-card table thead tr {
+  background: var(--muted);
+}
+.chart-card table tbody tr:nth-child(even) {
+  background: rgba(0,0,0,0.03);
+}
+[data-theme='dark'] .chart-card table tbody tr:nth-child(even) {
+  background: rgba(255,255,255,0.03);
+}
+
 /* NOVAS REGRAS PARA GARANTIR ESPAÇO DOS GRÁFICOS */
 .charts-grid .chart-card {
   min-height: 400px;
@@ -380,12 +460,12 @@ a:hover{color:var(--link-hover)}
 
 /* O QUE CRIA A LINHA É EXCLUSIVAMENTE O TABS-CONTAINER */
 .tabs-container {
-  display: flex !important;
-  gap: 0.5rem !important;
-  border-bottom: 2px solid var(--border) !important;
-  margin-bottom: 0 !important;
-  padding-bottom: 0 !important;
-  align-items: stretch !important; /* Estica os botões para grudarem embaixo */
+  display:flex !important;
+  gap:.45rem !important;
+  border-bottom:2px solid var(--border) !important;
+  margin-bottom:1.5rem !important;
+  padding-bottom:0 !important;
+  align-items:flex-end !important;
 }
 
 /* OS BOTÕES DEVEM TOCAR O FUNDO */
@@ -434,6 +514,24 @@ a:hover{color:var(--link-hover)}
 #filtersSection { margin-top: 1rem; }
 #dateFilters { margin-bottom: 1rem; }
 
+
+.trend-summary-title{font-size:1.05rem;font-weight:800;margin-bottom:.85rem;color:var(--foreground)}
+.trend-summary-list,.trend-mini-list{margin:0;padding-left:1.1rem;color:var(--foreground)}
+.trend-summary-list li,.trend-mini-list li{margin:.4rem 0;line-height:1.48}
+.trend-card{background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));border:1px solid var(--border);border-radius:16px;padding:1rem}
+.trend-card h3{margin:0 0 .65rem 0;font-size:.98rem}
+.trend-muted{color:var(--muted-fg);font-size:.78rem}
+.trend-badge-up,.trend-badge-down,.trend-badge-flat{display:inline-flex;align-items:center;gap:.35rem;padding:.18rem .5rem;border-radius:999px;font-size:.74rem;font-weight:800}
+.trend-badge-up{background:var(--trend-badge-up-bg);color:var(--trend-badge-up-text);border:1px solid rgba(255,107,79,.28)}
+.trend-badge-down{background:var(--trend-badge-down-bg);color:var(--trend-badge-down-text);border:1px solid rgba(67,181,129,.28)}
+.trend-badge-flat{background:var(--trend-badge-flat-bg);color:var(--trend-badge-flat-text);border:1px solid rgba(232,181,55,.28)}
+.trend-section-title{font-size:.92rem;font-weight:800;margin-bottom:.75rem}
+.trend-callout{border-radius:12px;padding:.8rem .9rem;margin-top:.75rem;font-size:.82rem;line-height:1.45}
+.trend-callout.attention{background:rgba(255,107,79,.08);border:1px solid rgba(255,107,79,.28);color:#9b2a0a}
+.trend-callout.positive{background:rgba(67,181,129,.08);border:1px solid rgba(67,181,129,.28);color:#0a4d2a}
+[data-theme='dark'] .trend-callout.attention{color:#ffd9cf}
+[data-theme='dark'] .trend-callout.positive{color:#d6ffe1}
+
 </style>
 </head>
 <body>
@@ -463,6 +561,8 @@ a:hover{color:var(--link-hover)}
   <div class="tabs-container">
     <button class="tab-btn active" type="button" data-tab="operacional"><span>Operacional</span></button>
     <button class="tab-btn" type="button" data-tab="graficos"><span>Gerencial</span></button>
+    <button class="tab-btn" type="button" data-tab="tendencias"><span>Tendências</span></button>
+    <button class="tab-btn" type="button" data-tab="relatorio"><span>Relatório Mensal</span></button>
 </div>
 <div id="tab-operacional" class="tab-content active">
     <div id="kpiGrid" class="kpi-grid"></div>
@@ -473,6 +573,14 @@ a:hover{color:var(--link-hover)}
 <div id="tab-graficos" class="tab-content">
     <div id="comparisonCards" class="kpi-grid" style="margin-bottom:1rem"></div>
     <div id="chartsGrid" class="charts-grid"></div>
+</div>
+<div id="tab-tendencias" class="tab-content">
+    <div id="trendSummaryCard" class="chart-card" style="margin-bottom:1rem"></div>
+    <div id="trendCardsGrid" class="kpi-grid" style="margin-bottom:1rem"></div>
+    <div id="trendListsGrid" class="charts-grid"></div>
+</div>
+<div id="tab-relatorio" class="tab-content">
+    <div id="monthlyReportGrid" class="charts-grid"></div>
 </div>
   <footer>Desenvolvido por Leandro Ferreira (2026) — Uso interno</footer>
 </main>
@@ -1384,6 +1492,8 @@ if (btnClear) {
   function closeModal() {
     modal.classList.remove('active');
     dataBox.style.display = 'none';
+    const mst = document.getElementById('modalSummaryTable');
+    if (mst) { mst.innerHTML = ''; mst.style.display = 'none'; }
     if (modalChart) {
       modalChart.destroy();
       modalChart = null;
@@ -1394,87 +1504,104 @@ if (btnClear) {
     if (e.target === modal || e.target === closeBtn) closeModal();
   });
 
-  document.getElementById('chartsGrid').addEventListener('click', e => {
+  function openChartInModal(e) {
     const card = e.target.closest('.chart-card');
     if (!card) return;
-
     const canvas = card.querySelector('canvas');
     if (!canvas) return;
-
     const chart = chartInstances.find(c => c.canvas === canvas);
     if (!chart) return;
-
     if (modalChart) modalChart.destroy();
+    modalTitle.textContent = card.querySelector('.chart-title')?.textContent || 'Gráfico';
+    modalCanvas.style.width = '100%';
+    modalCanvas.style.height = '100%';
+    const modalContent = modalCanvas.closest('.modal-content');
+    modalContent.style.width = '90vw';
+    modalContent.style.maxHeight = '90vh';
+    modalContent.style.overflow = 'auto';
+    modalContent.style.display = 'flex';
+    modalContent.style.flexDirection = 'column';
 
-    modalTitle.textContent =
-      card.querySelector('.chart-title')?.textContent || 'Gráfico';
-
-// 🔥 FORÇA O TAMANHO REAL DO MODAL E DO CANVAS
-
-// ✅ largura total, altura automática (NUNCA fixa)
-modalCanvas.style.width = '100%';
-modalCanvas.style.height = '100%';
-
-const modalContent = modalCanvas.closest('.modal-content');
-modalContent.style.width = '90vw';
-modalContent.style.maxHeight = '90vh';
-modalContent.style.overflow = 'hidden';
-
-modalChart = new Chart(modalCanvas, {
-  type: chart.config.type,
-  data: JSON.parse(JSON.stringify(chart.config.data)),
-  options: {
-    ...JSON.parse(JSON.stringify(chart.config.options)),
-
-    responsive: true,
-    maintainAspectRatio: false,
-
-    // 👉 ESSENCIAL para não ficar estreito
-    aspectRatio: null,
-
-    layout: { padding: 12 },
-
-    scales: {
-      ...(chart.config.options.scales || {}),
-      x: { ticks: { autoSkip: false } }
-    },
-
-    onClick(evt, elements) {
-      if (!elements.length) return;
-
-      const index = elements[0].index;
-      filters.text = this.data.labels[index];
-      renderAll();
-
-      const btnClear = document.getElementById('btnClearChartFilter');
-      if (btnClear) btnClear.style.display = 'inline-flex';
-
-      closeModal();
+    // Injetar tabela de summary do card original no modal
+    const existingTable = card.querySelector('table');
+    let mst = document.getElementById('modalSummaryTable');
+    if (!mst) {
+      mst = document.createElement('div');
+      mst.id = 'modalSummaryTable';
+      mst.style.cssText = 'overflow-x:auto;margin-top:1rem;max-height:220px;overflow-y:auto;flex-shrink:0;';
+      modalContent.appendChild(mst);
     }
-  }
-});
+    if (existingTable) {
+      mst.innerHTML = existingTable.outerHTML;
+      mst.style.display = 'block';
+    } else {
+      mst.innerHTML = '';
+      mst.style.display = 'none';
+    }
 
-// 🚀 obriga o Chart.js a recalcular tamanho após montar
-requestAnimationFrame(() => modalChart.resize());
+    const origOpts = JSON.parse(JSON.stringify(chart.config.options));
+    modalChart = new Chart(modalCanvas, {
+      type: chart.config.type,
+      data: JSON.parse(JSON.stringify(chart.config.data)),
+      options: {
+        ...origOpts,
+        responsive: true,
+        maintainAspectRatio: false,
+        aspectRatio: null,
+        layout: origOpts.layout || { padding: 16 },
+        plugins: {
+          ...(origOpts.plugins || {}),
+          legend: {
+            position: 'bottom',
+            labels: {
+              font: { size: 12 },
+              padding: 20
+            }
+          },
+          datalabels: { ...(origOpts.plugins?.datalabels || {}), display: true }
+        },
+        scales: {
+          ...(chart.config.options.scales || {}),
+          x: { ...(chart.config.options.scales?.x || {}), ticks: { ...(chart.config.options.scales?.x?.ticks || {}), autoSkip: false, font: { size: 11 } } },
+          y: { ...(chart.config.options.scales?.y || {}), ticks: { ...(chart.config.options.scales?.y?.ticks || {}), font: { size: 12 } } },
+          ...(chart.config.options.scales?.y2 ? { y2: { ...chart.config.options.scales.y2 } } : {})
+        },
+        onClick(evt, elements) {
+          if (!elements.length) return;
+          const index = elements[0].index;
+          filters.text = this.data.labels[index];
+          renderAll();
+          const btnClear = document.getElementById('btnClearChartFilter');
+          if (btnClear) btnClear.style.display = 'inline-flex';
+          closeModal();
+        }
+      }
+    });
+    requestAnimationFrame(() => modalChart.resize());
     btnExport.onclick = () => {
       const a = document.createElement('a');
       a.download = `grafico_${Date.now()}.png`;
       a.href = modalCanvas.toDataURL('image/png');
       a.click();
     };
-
     btnShowData.onclick = () => {
       dataBox.textContent = modalChart.data.labels
         .map((l, i) =>
           `${l}: ${modalChart.data.datasets.map(d => d.data[i]).join(', ')}`
         )
         .join('\n');
-      dataBox.style.display =
-        dataBox.style.display === 'none' ? 'block' : 'none';
+      dataBox.style.display = dataBox.style.display === 'none' ? 'block' : 'none';
     };
-
     modal.classList.add('active');
-  });
+  }
+
+    // Listener para chartsGrid (Gerencial)
+  const cg = document.getElementById('chartsGrid');
+  if (cg) cg.addEventListener('click', openChartInModal);
+
+  // Listener para monthlyReportGrid (Relatório Mensal)
+  const mg = document.getElementById('monthlyReportGrid');
+  if (mg) mg.addEventListener('click', openChartInModal);
 }
 
 document.addEventListener('DOMContentLoaded', setupChartModal);
@@ -1494,7 +1621,8 @@ if (hasChartLib() && typeof ChartDataLabels !== 'undefined') { Chart.register(Ch
 
 if (hasChartLib()) {
   Chart.defaults.plugins.datalabels = {
-    color: '#334155', anchor: 'center', align: 'center', font: { size: 13, weight: '600' }, formatter: (v) => v
+    color: '#334155', anchor: 'center', align: 'center', font: { size: 13, weight: '600' },
+    formatter: (v) => (v === 0 || v === null || v === undefined || v === '') ? '' : v
   };
 }
 
@@ -1571,6 +1699,845 @@ function getFacetSubset(){
   return applyFilters(allCases, f);
 }
 
+
+
+function pctChange(current, previous){
+  if(!previous && !current) return 0;
+  if(!previous) return 100;
+  return ((current - previous) / previous) * 100;
+}
+function trendClass(value, goodWhenDown=false){
+  if(Math.abs(value) < 5) return {label:'Estabilidade', cls:'trend-badge-flat'};
+  const up = value > 0;
+  if(goodWhenDown){
+    return up ? {label:'Pressão maior', cls:'trend-badge-up'} : {label:'Melhora', cls:'trend-badge-down'};
+  }
+  return up ? {label:'Alta', cls:'trend-badge-up'} : {label:'Queda', cls:'trend-badge-down'};
+}
+function fmtPct(v){
+  const n = Math.abs(v).toFixed(1).replace('.',',');
+  return (v>0?'+':'') + n + '%';
+}
+function monthKeyFromDate(dateLike){
+  if(!dateLike) return null;
+  const d = new Date(dateLike);
+  if(isNaN(d)) return null;
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+function getMonthlyTrendData(cases){
+  const now = new Date();
+  const currKey = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  const prevDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
+  const prevKey = prevDate.getFullYear() + '-' + String(prevDate.getMonth()+1).padStart(2,'0');
+
+  const entriesCurrent = cases.filter(c => monthKeyFromDate(getCombinedDate(c)) === currKey).length;
+  const entriesPrevious = cases.filter(c => monthKeyFromDate(getCombinedDate(c)) === prevKey).length;
+  const resolvedCurrent = cases.filter(c => monthKeyFromDate(c.resolvido) === currKey).length;
+  const resolvedPrevious = cases.filter(c => monthKeyFromDate(c.resolvido) === prevKey).length;
+  const highCurrent = cases.filter(c => c.risco==='Alto' && monthKeyFromDate(getCombinedDate(c)) === currKey).length;
+  const highPrevious = cases.filter(c => c.risco==='Alto' && monthKeyFromDate(getCombinedDate(c)) === prevKey).length;
+  const slaCurrentOpen = cases.filter(c => isOpen(c.status) && monthKeyFromDate(getCombinedDate(c)) === currKey);
+  const slaPreviousOpen = cases.filter(c => isOpen(c.status) && monthKeyFromDate(getCombinedDate(c)) === prevKey);
+  const slaBreachedCurrent = slaCurrentOpen.filter(c => getSlaStatus(c)==='breached').length;
+  const slaBreachedPrevious = slaPreviousOpen.filter(c => getSlaStatus(c)==='breached').length;
+  const slaCurrentPct = slaCurrentOpen.length ? (slaBreachedCurrent / slaCurrentOpen.length) * 100 : 0;
+  const slaPreviousPct = slaPreviousOpen.length ? (slaBreachedPrevious / slaPreviousOpen.length) * 100 : 0;
+
+  const openNow = cases.filter(c => isOpen(c.status)).length;
+  const balanceCurrent = entriesCurrent - resolvedCurrent;
+
+  const typeAggCurr = {};
+  const typeAggPrev = {};
+  cases.forEach(c => {
+    const key = monthKeyFromDate(getCombinedDate(c));
+    if(key === currKey) typeAggCurr[c.tipo] = (typeAggCurr[c.tipo]||0)+1;
+    if(key === prevKey) typeAggPrev[c.tipo] = (typeAggPrev[c.tipo]||0)+1;
+  });
+
+  const typeDeltas = [...new Set([...Object.keys(typeAggCurr), ...Object.keys(typeAggPrev)])].map(tipo => {
+    const current = typeAggCurr[tipo] || 0;
+    const previous = typeAggPrev[tipo] || 0;
+    return { tipo, current, previous, delta: current - previous, pct: pctChange(current, previous) };
+  }).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta));
+
+  return {
+    entriesCurrent, entriesPrevious,
+    resolvedCurrent, resolvedPrevious,
+    highCurrent, highPrevious,
+    slaCurrentPct, slaPreviousPct,
+    openNow, balanceCurrent,
+    typeDeltas,
+    currKey, prevKey
+  };
+}
+function executiveLineVolume(d, entryVar){
+  if(entryVar > 15) return 'O fluxo de entrada acelerou de forma relevante em relação ao mês anterior.';
+  if(entryVar > 5) return 'O volume de entrada avançou em ritmo moderado.';
+  if(entryVar < -15) return 'Houve desaceleração importante do volume de entrada.';
+  if(entryVar < -5) return 'O fluxo de entrada recuou de forma moderada.';
+  return 'O fluxo de entrada permaneceu estável entre os dois meses.';
+}
+function executiveLineResolution(d, resolvedVar){
+  if(d.balanceCurrent > 0) return 'As entradas seguem acima das resoluções no mês.';
+  if(d.balanceCurrent < 0) return 'As resoluções superaram as entradas no mês, favorecendo redução de backlog.';
+  if(resolvedVar > 5) return 'A capacidade de saída cresceu no período recente.';
+  return 'Entradas e resoluções ficaram equilibradas no período analisado.';
+}
+function executiveLineRisk(highVar){
+  if(highVar > 15) return 'O perfil de criticidade piorou, com avanço expressivo dos casos de risco alto.';
+  if(highVar > 5) return 'Os casos de risco alto cresceram de forma moderada.';
+  if(highVar < -15) return 'A criticidade recuou de forma relevante frente ao mês anterior.';
+  if(highVar < -5) return 'Houve leve melhora no perfil de risco.';
+  return 'O perfil de risco permaneceu estável no comparativo mensal.';
+}
+function executiveLineSla(slaVar){
+  if(slaVar > 2) return 'O indicador de SLA mostra piora material no período.';
+  if(slaVar > 0.5) return 'Há sinal de pressão adicional sobre o SLA.';
+  if(slaVar < -2) return 'O cumprimento de SLA melhorou de forma relevante.';
+  if(slaVar < -0.5) return 'Há melhora moderada no comportamento de SLA.';
+  return 'O SLA permaneceu estável no comparativo com o mês anterior.';
+}
+function buildTrendAlerts(d, entryVar, resolvedVar, highVar, slaVar){
+  const alerts = [];
+  const positives = [];
+
+  if(d.balanceCurrent > 0) alerts.push(`Entradas acima de resoluções no mês (${balanceCurrentLabel(d.balanceCurrent)}).`);
+  if(highVar > 10) alerts.push(`Casos de risco alto cresceram ${fmtPct(highVar)} frente ao mês anterior.`);
+  if(slaVar > 1) alerts.push(`O percentual de SLA estourado avançou ${(slaVar>0?'+':'') + slaVar.toFixed(1).replace('.',',')} p.p. no período.`);
+  if(entryVar > 20 && resolvedVar < entryVar) alerts.push('O crescimento do volume está mais acelerado do que a capacidade de saída.');
+
+  if(d.balanceCurrent < 0) positives.push(`Resolvidos acima das entradas no mês (${balanceCurrentLabel(d.balanceCurrent)}), favorecendo redução de estoque.`);
+  if(highVar < -5) positives.push(`O volume de risco alto recuou ${fmtPct(highVar)} frente ao mês anterior.`);
+  if(slaVar < -0.5) positives.push(`O SLA melhorou ${(Math.abs(slaVar)).toFixed(1).replace('.',',')} p.p. no comparativo mensal.`);
+  if(resolvedVar > 5) positives.push(`A capacidade de resolução cresceu ${fmtPct(resolvedVar)} no mês.`);
+
+  return {alerts, positives};
+}
+function capacidadeTrend(d){
+  if(d.balanceCurrent < 0)  return {cls:'trend-badge-down', label:'▼ Alta capacidade'};
+  if(d.balanceCurrent === 0) return {cls:'trend-badge-flat', label:'→ Equilibrado'};
+  return {cls:'trend-badge-up', label:'▲ Pressão de backlog'};
+}
+function renderTrendCards(cases){
+  const summary = document.getElementById('trendSummaryCard');
+  const cards = document.getElementById('trendCardsGrid');
+  const lists = document.getElementById('trendListsGrid');
+  if(!summary || !cards || !lists) return;
+  if(!cases || !cases.length){
+    summary.innerHTML = '<div class="trend-summary-title">Tendências</div><div class="trend-muted">Carregue uma planilha para visualizar os insights.</div>';
+    cards.innerHTML = '';
+    lists.innerHTML = '';
+    return;
+  }
+
+  const d = getMonthlyTrendData(cases);
+  const entryVar = pctChange(d.entriesCurrent, d.entriesPrevious);
+  const resolvedVar = pctChange(d.resolvedCurrent, d.resolvedPrevious);
+  const highVar = pctChange(d.highCurrent, d.highPrevious);
+  const slaVar = d.slaCurrentPct - d.slaPreviousPct;
+  const entryTrend = trendClass(entryVar);
+  const resolvedTrend = trendClass(resolvedVar);
+  const highTrend = trendClass(highVar);
+  const slaTrend = trendClass(slaVar, true);
+  const trendAlerts = buildTrendAlerts(d, entryVar, resolvedVar, highVar, slaVar);
+
+  const topUp = d.typeDeltas.filter(x=>x.delta>0).slice(0,3);
+  const topDown = d.typeDeltas.filter(x=>x.delta<0).slice(0,3);
+
+  const summaryLines = [
+    `As entradas do mês atual ficaram em ${d.entriesCurrent}, contra ${d.entriesPrevious} no mês anterior (${fmtPct(entryVar)}).`,
+    executiveLineVolume(d, entryVar),
+    `Os resolvidos somaram ${d.resolvedCurrent} no período, frente a ${d.resolvedPrevious} no mês anterior (${fmtPct(resolvedVar)}).`,
+    executiveLineResolution(d, resolvedVar),
+    executiveLineRisk(highVar),
+    executiveLineSla(slaVar)
+  ];
+
+  summary.innerHTML = `
+    <div class="trend-summary-title">Resumo Executivo de Tendências</div>
+    <ul class="trend-summary-list">${summaryLines.map(line=>`<li>${line}</li>`).join('')}</ul>
+    ${trendAlerts.alerts.length ? `<div class="trend-callout attention"><strong>Atenção:</strong> ${trendAlerts.alerts[0]}</div>` : ''}
+    ${trendAlerts.positives.length ? `<div class="trend-callout positive"><strong>Ponto positivo:</strong> ${trendAlerts.positives[0]}</div>` : ''}
+  `;
+
+  const cardData = [
+    {
+      title:'Volume',
+      meta:`Tendência: <span class="${entryTrend.cls}">${entryTrend.label}</span>`,
+      items:[
+        `${d.entriesCurrent} entradas no mês atual.`,
+        `Variação de ${fmtPct(entryVar)} vs mês anterior.`,
+        executiveLineVolume(d, entryVar)
+      ]
+    },
+    {
+      title:'Capacidade Operacional',
+      meta:`Tendência: <span class="${capacidadeTrend(d).cls}">${capacidadeTrend(d).label}</span>`,
+      items:[
+        `${d.resolvedCurrent} casos resolvidos no mês.`,
+        `Saldo do mês: ${balanceCurrentLabel(d.balanceCurrent)}.`,
+        executiveLineResolution(d, resolvedVar)
+      ]
+    },
+    {
+      title:'Risco',
+      meta:`Tendência: <span class="${highTrend.cls}">${highTrend.label}</span>`,
+      items:[
+        `${d.highCurrent} casos de risco alto no mês atual.`,
+        `Variação de ${fmtPct(highVar)} vs mês anterior.`,
+        executiveLineRisk(highVar)
+      ]
+    },
+    {
+      title:'SLA',
+      meta:`Tendência: <span class="${slaTrend.cls}">${slaTrend.label}</span>`,
+      items:[
+        `${d.slaCurrentPct.toFixed(1).replace('.',',')}% dos abertos do mês estão fora do SLA.`,
+        `Variação de ${(slaVar>0?'+':'') + slaVar.toFixed(1).replace('.',',')} p.p. vs mês anterior.`,
+        executiveLineSla(slaVar)
+      ]
+    }
+  ];
+
+  cards.innerHTML = cardData.map(card => `
+    <div class="trend-card">
+      <h3>${card.title}</h3>
+      <div class="trend-muted" style="margin-bottom:.65rem">${card.meta}</div>
+      <ul class="trend-mini-list">${card.items.map(i=>`<li>${i}</li>`).join('')}</ul>
+    </div>
+  `).join('');
+
+  lists.innerHTML = `
+    <div class="chart-card">
+      <div class="trend-section-title">Maiores Altas e Quedas por Tipo</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div>
+          <div class="trend-muted" style="margin-bottom:.5rem">Maiores altas</div>
+          <ul class="trend-mini-list">${(topUp.length?topUp:[{tipo:'Sem destaque',pct:0,current:0,previous:0}]).map(x=>`<li><strong>${x.tipo}</strong>: ${fmtPct(x.pct)} (${x.previous} → ${x.current})</li>`).join('')}</ul>
+        </div>
+        <div>
+          <div class="trend-muted" style="margin-bottom:.5rem">Maiores quedas</div>
+          <ul class="trend-mini-list">${(topDown.length?topDown:[{tipo:'Sem destaque',pct:0,current:0,previous:0}]).map(x=>`<li><strong>${x.tipo}</strong>: ${fmtPct(x.pct)} (${x.previous} → ${x.current})</li>`).join('')}</ul>
+        </div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="trend-section-title">Pontos de Atenção do Período</div>
+      <ul class="trend-mini-list">
+        ${trendAlerts.alerts.length
+          ? trendAlerts.alerts.map(a=>`<li>${a}</li>`).join('')
+          : '<li>Sem alertas relevantes no comparativo mensal atual.</li>'}
+      </ul>
+      ${trendAlerts.positives.length ? `<div class="trend-callout positive"><strong>Sinais positivos:</strong><ul class="trend-mini-list">${trendAlerts.positives.map(a=>`<li>${a}</li>`).join('')}</ul></div>` : ''}
+    </div>
+  `;
+}
+function balanceCurrentLabel(v){
+  if(v > 0) return '+' + v + ' casos';
+  if(v < 0) return v + ' casos';
+  return '0 caso';
+}
+
+
+
+function getLast12MonthsAlertPldRisk(cases) {
+  const now = new Date();
+  const months = [];
+  for(let i=11; i>=0; i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    const label = String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+    months.push({key, label, alto:0, baixo:0});
+  }
+  const map = new Map(months.map(m => [m.key, m]));
+
+  cases.forEach(c => {
+    if(c.tipo !== 'Alerta PLD') return;
+    if(c.risco !== 'Alto' && c.risco !== 'Baixo') return;
+    const ref = getCombinedDate(c);
+    if(!ref) return;
+    const key = monthKeyFromDate(ref);
+    if(!key || !map.has(key)) return;
+
+    const bucket = map.get(key);
+    if(c.risco === 'Alto') bucket.alto++;
+    if(c.risco === 'Baixo') bucket.baixo++;
+  });
+  return months.map(m=>({...m,total:m.alto+m.baixo}));
+}
+
+function getLast12MonthsHighRiskSubtypes(cases){
+  const now = new Date();
+  const months = [];
+  for(let i=11;i>=0;i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    const label = String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+    months.push({key,label,k50:0,k30:0,passagem:0,pep:0});
+  }
+  const map = new Map(months.map(m=>[m.key,m]));
+  cases.forEach(c=>{
+    if(c.tipo!=='Alerta PLD'||c.risco!=='Alto') return;
+    const ref=getCombinedDate(c);
+    const key=monthKeyFromDate(ref);
+    if(!key||!map.has(key)) return;
+    const s=(c.subtipo_pld||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+    const b=map.get(key);
+    if(s.includes('50')) b.k50++;
+    else if(s.includes('30')) b.k30++;
+    else if(s.includes('passagem')) b.passagem++;
+    else if(s.includes('pep')) b.pep++;
+  });
+  return months;
+}
+
+
+function getLast12MonthsCoafIndex(cases){
+  const now = new Date();
+  const months = [];
+  for(let i=11;i>=0;i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    const label = String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getFullYear()).slice(2);
+    months.push({key,label,concluidos:0,coaf:0,emAnalise:0,diligencias:0});
+  }
+  const map = new Map(months.map(m=>[m.key,m]));
+
+  cases.forEach(c=>{
+    if(c.tipo !== 'Alerta PLD') return;
+    if(c.risco !== 'Alto') return;
+    const ref = getCombinedDate(c);
+    const key = monthKeyFromDate(ref);
+    if(!key || !map.has(key)) return;
+    const b = map.get(key);
+    const s = (c.status || '').trim();
+
+    // Apenas "Comunicação COAF" conta como COAF
+    if(s === 'Comunicação COAF'){
+      b.coaf++;
+    } else if(s === 'Em Análise'){
+      b.emAnalise++;
+    } else if(s === 'Aguardando Retorno Diligências'){
+      b.diligencias++;
+    } else if(!isOpen(s)){
+      // Todo caso fechado que não é COAF = Concluído
+      b.concluidos++;
+    }
+  });
+
+  months.forEach(m=>{
+    // Índice = COAF / (Concluídos + COAF) * 100
+    const base = m.concluidos + m.coaf;
+    m.indiceConversao = base > 0 ? (m.coaf / base) * 100 : 0;
+  });
+
+  return months;
+}
+
+
+function getSafraConcluidaData(cases){
+  // Only Alerta PLD, concluded (not open, not COAF)
+  const concluded = cases.filter(c =>
+    c.tipo === 'Alerta PLD' &&
+    c.risco === 'Alto' &&
+    !isOpen(c.status) &&
+    c.status !== 'Comunicação COAF' &&
+    (c.resolvido || c.atualizado)
+  );
+
+  // Find last 6 months that have conclusions
+  const conclusionMap = new Map();
+  concluded.forEach(c => {
+    // Use resolvido if available, fallback to atualizado
+    const conclusionDate = c.resolvido || c.atualizado;
+    const rKey = monthKeyFromDate(conclusionDate);
+    const oKey = monthKeyFromDate(getCombinedDate(c));
+    if(!rKey || !oKey) return;
+    if(!conclusionMap.has(rKey)) conclusionMap.set(rKey, new Map());
+    const inner = conclusionMap.get(rKey);
+    inner.set(oKey, (inner.get(oKey) || 0) + 1);
+  });
+
+  // Sort conclusion months, take last 6
+  const conclusionMonths = [...conclusionMap.keys()].sort().slice(-3);
+
+  // Collect all origin months referenced
+  const allOriginKeys = new Set();
+  conclusionMonths.forEach(rKey => {
+    conclusionMap.get(rKey).forEach((v, oKey) => allOriginKeys.add(oKey));
+  });
+  const originMonths = [...allOriginKeys].sort();
+
+  // Build month label helper
+  const fmtMonthKey = (key) => {
+    const [y, m] = key.split('-');
+    const names = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    return names[parseInt(m)-1] + '/' + String(y).slice(2);
+  };
+
+  // Build datasets: one per origin month
+  const COLORS = [
+    'hsl(217,45%,22%)',
+    'hsl(38,55%,55%)',
+    'hsl(75,60%,48%)',
+    'hsl(197,50%,62%)',
+    'hsl(215,42%,50%)',
+    'hsl(263,32%,55%)',
+    'hsl(200,38%,52%)',
+  ];
+
+  const datasets = originMonths.map((oKey, i) => ({
+    label: 'Safra ' + fmtMonthKey(oKey),
+    data: conclusionMonths.map(rKey => (conclusionMap.get(rKey).get(oKey) || 0)),
+    backgroundColor: COLORS[i % COLORS.length],
+    stack: 'safra',
+    borderRadius: 4
+  }));
+
+  // Build totals per conclusion month
+  const totals = conclusionMonths.map(rKey => {
+    let t = 0;
+    conclusionMap.get(rKey).forEach(v => t += v);
+    return t;
+  });
+
+  return {
+    labels: conclusionMonths.map(fmtMonthKey),
+    datasets,
+    totals,
+    originMonths: originMonths.map(fmtMonthKey),
+    conclusionMonths: conclusionMonths.map(fmtMonthKey)
+  };
+}
+
+function renderMonthlyReport(cases) {
+  const grid = document.getElementById('monthlyReportGrid');
+  if(!grid) return;
+  if(!cases || cases.length === 0){
+    grid.innerHTML = '<div class="chart-card"><h3 class="chart-title">Relatório mensal</h3><div class="trend-muted">Nenhum dado disponível.</div></div>';
+    return;
+  }
+
+  const series = getLast12MonthsAlertPldRisk(cases);
+
+  const pldCard = document.createElement('div');
+  pldCard.className = 'chart-card span-2';
+  pldCard.style.cssText = 'min-height:360px;display:flex;flex-direction:column;';
+  const pldTableRows = [
+    {label:'Alto risco', bg:'hsl(217,45%,22%)', key:'alto'},
+    {label:'Baixo risco', bg:'hsl(215,42%,50%)', key:'baixo'}
+  ].map(row=>`<tr>
+    <td style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:${row.bg};display:inline-block"></span>${row.label}</td>
+    ${series.map(s=>`<td style="text-align:center">${s[row.key]>0?s[row.key]:''}</td>`).join('')}
+  </tr>`).join('');
+  const pldTotalRow = `<tr style="font-weight:700;border-top:2px solid var(--border)"><td>Total</td>${series.map(s=>`<td style="text-align:center">${s.total}</td>`).join('')}</tr>`;
+  pldCard.innerHTML = `
+    <h3 class="chart-title">Alertas de PLD — Últimos 12 Meses (Alto x Baixo Risco)</h3>
+    <div class="trend-muted" style="margin-bottom:.75rem">Volume mensal (Data Combinada), considerando alertas de PLD classificados como Alto ou Baixo risco.</div>
+    <div style="position:relative;flex:1;min-height:0"><canvas id="chMonthlyAlertPldRisk"></canvas></div>
+    <div style="overflow-x:auto;margin-top:1rem">
+      <table style="width:100%;border-collapse:collapse;font-size:0.75rem">
+        <thead><tr style="border-bottom:1px solid var(--border)">
+          <th style="text-align:left;padding:4px 8px;font-weight:600"></th>
+          ${series.map(s=>`<th style="text-align:center;padding:4px 8px;font-weight:600">${s.label}</th>`).join('')}
+        </tr></thead>
+        <tbody style="font-size:0.72rem">${pldTableRows}${pldTotalRow}</tbody>
+      </table>
+    </div>
+  `;
+  grid.innerHTML = '';
+  grid.appendChild(pldCard);
+
+  makeChart('chMonthlyAlertPldRisk', {
+    type: 'bar',
+    data: {
+      labels: series.map(s => s.label),
+      datasets: [
+        {
+          label: 'Alto risco',
+          data: series.map(s => s.alto),
+          backgroundColor: 'hsl(217,45%,22%)',
+          borderRadius: 4,
+          stack: 'pld'
+        },
+        {
+          label: 'Baixo risco',
+          data: series.map(s => s.baixo),
+          backgroundColor: 'hsl(215,42%,50%)',
+          borderRadius: 4,
+          stack: 'pld'
+        }
+      ]
+    },
+    options: {
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 16 } },
+        datalabels: {
+          display: true,
+          borderRadius: 6,
+          padding: { top: 2, right: 6, bottom: 2, left: 6 },
+          font: { size: 11, weight: '700' },
+          formatter: (v) => v > 0 ? v : '',
+          anchor: 'center',
+          align: 'center',
+          backgroundColor: (ctx) => {
+            const colors = ['hsl(217,45%,12%)', 'hsl(215,42%,28%)'];
+            return colors[ctx.datasetIndex] !== undefined ? colors[ctx.datasetIndex] : 'hsl(215,40%,18%)';
+          },
+          color: '#f1f5f9'
+        }
+      },
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true, beginAtZero: true }
+      }
+    }
+  });
+
+  // Second chart: high risk subtypes
+  const sub = getLast12MonthsHighRiskSubtypes(cases);
+  const subCard = document.createElement('div');
+  subCard.className = 'chart-card span-2';
+  subCard.style.cssText = 'min-height:360px;display:flex;flex-direction:column;';
+  const subRowsDef = [
+    {label:'Depósitos 50k/Mês',   bg:'hsl(217,45%,22%)', key:'k50'},
+    {label:'Depósitos 30k Unit.', bg:'hsl(38,55%,55%)',  key:'k30'},
+    {label:'Contas de Passagem',  bg:'hsl(197,50%,62%)', key:'passagem'},
+    {label:'PEP Depósitos 20k',   bg:'hsl(75,60%,48%)',  key:'pep'}
+  ];
+  const subTableRows = subRowsDef.map(row=>`<tr>
+    <td style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:${row.bg};display:inline-block"></span>${row.label}</td>
+    ${sub.map(s=>`<td style="text-align:center">${s[row.key]>0?s[row.key]:''}</td>`).join('')}
+  </tr>`).join('');
+  const subTotalRow = `<tr style="font-weight:700;border-top:2px solid var(--border)"><td>Total</td>${sub.map(s=>`<td style="text-align:center">${(s.k50+s.k30+s.passagem+s.pep)||''}</td>`).join('')}</tr>`;
+  subCard.innerHTML = `
+    <h3 class="chart-title">Alertas PLD (Alto Risco) por Subtipo — Últimos 12 Meses</h3>
+    <div class="trend-muted" style="margin-bottom:.75rem">Distribuição mensal dos principais subtipos dentro de casos de alto risco.</div>
+    <div style="position:relative;flex:1;min-height:0"><canvas id="chMonthlySubtypes"></canvas></div>
+    <div style="overflow-x:auto;margin-top:1rem">
+      <table style="width:100%;border-collapse:collapse;font-size:0.75rem">
+        <thead><tr style="border-bottom:1px solid var(--border)">
+          <th style="text-align:left;padding:4px 8px;font-weight:600"></th>
+          ${sub.map(s=>`<th style="text-align:center;padding:4px 8px;font-weight:600">${s.label}</th>`).join('')}
+        </tr></thead>
+        <tbody style="font-size:0.72rem">${subTableRows}${subTotalRow}</tbody>
+      </table>
+    </div>
+  `;
+  grid.appendChild(subCard);
+
+  makeChart('chMonthlySubtypes',{
+    type:'bar',
+    data:{
+      labels:sub.map(s=>s.label),
+      datasets:[
+        {label:'Depósitos 50k/Mês',data:sub.map(s=>s.k50),backgroundColor:'hsl(217,45%,22%)',stack:'sub',borderRadius:4},
+        {label:'Depósitos 30k Unit.',data:sub.map(s=>s.k30),backgroundColor:'hsl(38,55%,55%)',stack:'sub',borderRadius:4},
+        {label:'Contas de Passagem',data:sub.map(s=>s.passagem),backgroundColor:'hsl(197,50%,62%)',stack:'sub',borderRadius:4},
+        {label:'PEP Depósitos 20k',data:sub.map(s=>s.pep),backgroundColor:'hsl(75,60%,48%)',stack:'sub',borderRadius:4}
+      ]
+    },
+    options:{
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:11},padding:16}},
+        datalabels:{
+          display: true,
+          borderRadius: 6,
+          padding: { top: 2, right: 6, bottom: 2, left: 6 },
+          font:{size:10,weight:'700'},
+          formatter:(v)=>v>0?v:'',
+          anchor:'center',
+          align:'center',
+          backgroundColor: (ctx) => {
+            const colors = ['hsl(217,45%,12%)', 'hsl(38,55%,28%)', 'hsl(197,50%,30%)', 'hsl(75,60%,22%)'];
+            return colors[ctx.datasetIndex] !== undefined ? colors[ctx.datasetIndex] : 'hsl(215,40%,18%)';
+          },
+          color: '#f1f5f9'
+        }
+      },
+      responsive:true,
+      maintainAspectRatio:false,
+      scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true}}
+    }
+  });
+
+  // Third chart: COAF conversion index
+  const coafSeries = getLast12MonthsCoafIndex(cases);
+  const coafCard = document.createElement('div');
+  coafCard.className = 'chart-card span-2';
+  coafCard.style.cssText = 'min-height:820px;display:flex;flex-direction:column;';
+  const coafRowsDef = [
+    {label:'Em Análise',                   bg:'hsl(38,50%,80%)',  key:'emAnalise'},
+    {label:'Aguard. Retorno Diligências',  bg:'hsl(197,50%,62%)', key:'diligencias'},
+    {label:'Comunicações ao COAF',         bg:'hsl(75,60%,48%)',  key:'coaf'},
+    {label:'Alertas Concluídos',           bg:'hsl(217,45%,22%)', key:'concluidos'}
+  ];
+  const coafTableRows = coafRowsDef.map(row=>`<tr>
+    <td style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:${row.bg};display:inline-block"></span>${row.label}</td>
+    ${coafSeries.map(s=>`<td style="text-align:center">${s[row.key]>0?s[row.key]:''}</td>`).join('')}
+  </tr>`).join('');
+  const coafIdxRow = `<tr style="border-top:1px solid var(--border)">
+    <td style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:hsl(65,90%,55%);display:inline-block"></span>Índice Conversão (%)</td>
+    ${coafSeries.map(s=>`<td style="text-align:center">${s.indiceConversao>0?s.indiceConversao.toFixed(1).replace('.',',')+'%':''}</td>`).join('')}
+  </tr>`;
+  const coafTotalRow2 = `<tr style="font-weight:700;border-top:2px solid var(--border)"><td>Total Alertas</td>${coafSeries.map(s=>`<td style="text-align:center">${(s.emAnalise+s.diligencias+s.coaf+s.concluidos)||''}</td>`).join('')}</tr>`;
+  coafCard.innerHTML = `
+    <h3 class="chart-title">Índice de Comunicações ao COAF — Alertas PLD Alto Risco (Últimos 12 Meses)</h3>
+    <div class="trend-muted" style="margin-bottom:.75rem">Alertas de PLD por status (Data Combinada). Índice de Conversão = COAF / (Concluídos + COAF).</div>
+    <div style="position:relative;flex:1;min-height:380px"><canvas id="chCoafIndex"></canvas></div>
+    <div style="overflow-x:auto;margin-top:1rem">
+      <table style="width:100%;border-collapse:collapse;font-size:0.75rem">
+        <thead><tr style="border-bottom:1px solid var(--border)">
+          <th style="text-align:left;padding:4px 8px;font-weight:600"></th>
+          ${coafSeries.map(s=>`<th style="text-align:center;padding:4px 8px;font-weight:600">${s.label}</th>`).join('')}
+        </tr></thead>
+        <tbody style="font-size:0.72rem">${coafTableRows}${coafIdxRow}${coafTotalRow2}</tbody>
+      </table>
+    </div>
+  `;
+  grid.appendChild(coafCard);
+
+  // Calcula min do eixo Y2 dinamicamente para empurrar linha ao topo
+  // A linha deve flutuar no terço superior — min = -(maxStack * 2.5)
+    // Y2 dinâmico: empurra a linha para o topo do gráfico
+  const _coafTotals = coafSeries.map(s => (s.emAnalise||0) + (s.diligencias||0) + (s.coaf||0) + (s.concluidos||0));
+  const _coafMax = Math.max(..._coafTotals, 10);
+  // Truque: y2Min muito negativo empurra a linha (valores 0~20%) para o TOPO visual
+  // O eixo direito mostra valores negativos embaixo e positivos (reais) acima das barras
+  const _indiceValues = coafSeries.map(s => s.indiceConversao || 0);
+  const _indiceMax = Math.max(..._indiceValues, 5);
+  const _y2Max = Math.ceil(_indiceMax * 1.5 / 5) * 5; // teto = 1.5x o pico real
+  const _y2Min = -(_coafMax * 0.5); // negativo proporcional às barras → linha flutua no topo
+  const _yMax = undefined; // y das barras livre (sem max fixo)
+
+  makeChart('chCoafIndex',{
+    type:'bar',
+    data:{
+      labels:coafSeries.map(s=>s.label),
+      datasets:[
+        {
+          label:'Em Análise',
+          data:coafSeries.map(s=>s.emAnalise),
+          backgroundColor:'hsl(38,50%,80%)',
+          stack:'coaf',
+          borderRadius:4,
+          datalabels:{
+            display: true,
+            borderRadius: 6,
+            padding: { top: 2, right: 6, bottom: 2, left: 6 },
+            font:{size:10,weight:'700'},
+            formatter:(v)=>v>0?v:'',
+            anchor:'center',align:'center',
+            backgroundColor: 'hsl(38,50%,28%)',
+            color: '#f1f5f9'
+          }
+        },
+        {
+          label:'Aguardando Retorno Diligências',
+          data:coafSeries.map(s=>s.diligencias),
+          backgroundColor:'hsl(197,50%,62%)',
+          stack:'coaf',
+          borderRadius:4,
+          datalabels:{
+            display: true,
+            borderRadius: 6,
+            padding: { top: 2, right: 6, bottom: 2, left: 6 },
+            font:{size:10,weight:'700'},
+            formatter:(v)=>v>0?v:'',
+            anchor:'center',align:'center',
+            backgroundColor: 'hsl(197,50%,28%)',
+            color: '#f1f5f9'
+          }
+        },
+        {
+          label:'Comunicações ao COAF',
+          data:coafSeries.map(s=>s.coaf),
+          backgroundColor:'hsl(75,60%,48%)',
+          stack:'coaf',
+          borderRadius:4,
+          datalabels:{
+            display: true,
+            borderRadius: 6,
+            padding: { top: 2, right: 6, bottom: 2, left: 6 },
+            font:{size:10,weight:'700'},
+            formatter:(v)=>v>0?v:'',
+            anchor:'center',align:'center',
+            backgroundColor: 'hsl(75,60%,22%)',
+            color: '#f1f5f9'
+          }
+        },
+        {
+          label:'Alertas Concluídos',
+          data:coafSeries.map(s=>s.concluidos),
+          backgroundColor:'hsl(217,45%,22%)',
+          stack:'coaf',
+          borderRadius:4,
+          datalabels:{
+            display: true,
+            borderRadius: 6,
+            padding: { top: 2, right: 6, bottom: 2, left: 6 },
+            font:{size:11,weight:'700'},
+            formatter:(v)=>v>0?v:'',
+            anchor:'center',align:'center',
+            backgroundColor: 'hsl(217,45%,10%)',
+            color: '#f1f5f9'
+          }
+        },
+        {
+          label:'Índice de Conversão (%)',
+          data:coafSeries.map(s=>parseFloat(s.indiceConversao.toFixed(1))),
+          type:'line',
+          borderColor:'hsl(65,90%,55%)',
+          backgroundColor:'hsl(65,90%,55%)',
+          pointBackgroundColor:'hsl(65,90%,55%)',
+          pointBorderColor:'#fff',
+          pointRadius:5,
+          pointBorderWidth:2,
+          tension:0.3,
+          yAxisID:'y2',
+          stack:undefined,
+          datalabels:{
+            color: '#1a3a0a',
+            backgroundColor: '#e8f57a',
+            borderRadius:6,
+            padding:{top:2,right:6,bottom:2,left:6},
+            font:{size:10,weight:'800'},
+            formatter:(v)=>v!=null?v.toFixed(1).replace('.',',')+'%':'',
+            anchor:'end',
+            align:'top',
+            offset:6,
+            clamp:false
+          }
+        }
+      ]
+    },
+    options:{
+      plugins:{
+        legend:{
+          position:'bottom',
+          labels:{font:{size:11},padding:16}
+        }
+      },
+      layout:{padding:{top:32,right:12,bottom:8,left:8}},
+      responsive:true,
+      maintainAspectRatio:false,
+      scales:{
+        x:{stacked:true,ticks:{font:{size:10}}},
+        y:{
+          stacked:true,
+          beginAtZero:true,
+          ticks:{font:{size:11}},
+          title:{display:false}
+        },
+        y2:{
+          type:'linear',
+          position:'right',
+          min:_y2Min,
+          max:_y2Max,
+          grid:{drawOnChartArea:false},
+          ticks:{
+            font:{size:10},
+            callback:(v) => v >= 0 ? v.toFixed(0)+'%' : '',
+            stepSize: Math.ceil((_y2Max - _y2Min) / 5)
+          },
+          title:{
+            display:true,
+            text:'Índice de Conversão (%)',
+            font:{size:10},
+            color:'hsl(65,90%,35%)'
+          }
+        }
+      }
+    }
+  });
+
+  // Fourth chart: Safra de Alertas por Data de Conclusão
+  const safraData = getSafraConcluidaData(allCases);
+  const safraCard = document.createElement('div');
+  safraCard.className = 'chart-card span-2';
+  safraCard.style.cssText = 'min-height:560px;display:flex;flex-direction:column;';
+
+  // Build summary table rows
+  const tableRows = safraData.datasets.map(ds =>
+    `<tr>
+      <td style="display:flex;align-items:center;gap:6px">
+        <span style="width:12px;height:12px;border-radius:3px;background:${ds.backgroundColor};display:inline-block"></span>
+        ${ds.label}
+       </td>
+      ${ds.data.map(v => `<td style="text-align:center">${v > 0 ? v : ''}</td>`).join('')}
+     </tr>`
+  ).join('');
+
+  const totalRow = `<tr style="font-weight:700;border-top:2px solid var(--border)">
+     <td>Total Geral</td>
+    ${safraData.totals.map(v => `<td style="text-align:center">${v}</td>`).join('')}
+   </tr>`;
+
+  safraCard.innerHTML = `
+    <h3 class="chart-title">Safra de Alertas PLD por Data de Conclusão</h3>
+    <div class="trend-muted" style="margin-bottom:.75rem">Alertas de PLD <strong>Alto Risco</strong> concluídos por mês, distribuídos pela safra de origem (Data Combinada).</div>
+    <div style="position:relative;flex:1;min-height:200px"><canvas id="chSafraConcluidaPLD"></canvas></div>
+    <div style="overflow-x:auto;margin-top:1rem">
+      <table style="width:100%;border-collapse:collapse;font-size:0.75rem">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            <th style="text-align:left;padding:4px 8px;font-weight:600"></th>
+            ${safraData.labels.map(l => `<th style="text-align:center;padding:4px 8px;font-weight:600">${l}</th>`).join('')}
+           </tr>
+        </thead>
+        <tbody style="font-size:0.72rem">
+          ${tableRows}
+          ${totalRow}
+        </tbody>
+       </table>
+    </div>
+  `;
+  grid.appendChild(safraCard);
+
+  makeChart('chSafraConcluidaPLD',{
+    type:'bar',
+    data:{
+      labels:safraData.labels,
+      datasets:safraData.datasets.map(ds=>({
+        ...ds,
+        datalabels:{
+          display: true,
+          borderRadius: 6,
+          padding: { top: 2, right: 6, bottom: 2, left: 6 },
+          font:{size:11,weight:'700'},
+          formatter:(v)=>v>0?v:'',
+          anchor:'center',
+          align:'center',
+          backgroundColor: (ctx) => {
+            const bg = ctx.dataset.backgroundColor || 'hsl(215,40%,20%)';
+            const m = String(bg).match(/hsl\(([-\d.]+),\s*([\d.]+)%,\s*([\d.]+)%\)/);
+            if (!m) return 'hsl(215,40%,18%)';
+            return `hsl(${m[1]},${m[2]}%,${Math.max(10, Number(m[3]) - 22)}%)`;
+          },
+          color: '#f1f5f9'
+        }
+      }))
+    },
+    options:{
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:11},padding:16}},
+        datalabels:{
+          display:true
+        }
+      },
+      responsive:true,
+      maintainAspectRatio:false,
+      scales:{
+        x:{stacked:true,ticks:{font:{size:10}}},
+        y:{stacked:true,beginAtZero:true,ticks:{font:{size:11}}}
+      }
+    }
+  });
+}
+
+
 // ==================== RENDER ====================
 function renderAll(){
   if(allCases.length === 0) {
@@ -1582,6 +2549,8 @@ function renderAll(){
     document.getElementById('kpiGrid').innerHTML = '<div class="kpi-card"><div class="kpi-value" style="color:var(--muted-fg)">—</div><div class="kpi-label">Aguardando upload da planilha</div></div>';
     document.getElementById('chartsGrid').innerHTML = '<div class="chart-card"><h3 class="chart-title">Carregue uma planilha para visualizar os dados</h3></div>';
     updateComparisonCards([]);
+    renderTrendCards([]);
+    renderMonthlyReport([]);
     return;
   }
   
@@ -1593,6 +2562,8 @@ function renderAll(){
   renderPersonPanel(filtered);
   renderTable(filtered);
   updateComparisonCards(filtered);
+  renderTrendCards(filtered);
+  renderMonthlyReport(allCases);
   document.getElementById('filtersSection').style.display='flex';
   document.getElementById('dateFilters').style.display='flex';
   document.getElementById('slaAlertsPanel').style.display='block';
@@ -1768,7 +2739,8 @@ function renderCharts(cases){
     return Number(match[3]) >= 60 ? '#111827' : '#ffffff';
   };
 
-  const badgeLabels = (bgGetter, extra = {}) => ({
+ function badgeLabels(bgGetter, extra = {}) {
+  return {
     display: true,
     borderRadius: 6,
     padding: { top: 2, right: 6, bottom: 2, left: 6 },
@@ -1776,13 +2748,10 @@ function renderCharts(cases){
     formatter: (v) => v > 0 ? v : '',
     clamp: true,
     backgroundColor: (ctx) => typeof bgGetter === 'function' ? bgGetter(ctx) : bgGetter,
-    color: (ctx) => {
-      const bg = typeof bgGetter === 'function' ? bgGetter(ctx) : bgGetter;
-      return readableText(bg);
-    },
+    color: '#f1f5f9',
     ...extra
-  });
-
+  };
+}
   const tipoCount={};cases.forEach(c=>tipoCount[c.tipo]=(tipoCount[c.tipo]||0)+1);
   const riscoCount={};cases.forEach(c=>riscoCount[c.risco]=(riscoCount[c.risco]||0)+1);
   const timeline=getTimeline(cases);
@@ -1805,7 +2774,6 @@ function renderCharts(cases){
     <div class="chart-card"><h3 class="chart-title">Casos por Tipo</h3><div style="position:relative;flex:1;min-height:0"><canvas id="chTipo"></canvas></div></div>
     <div class="chart-card"><h3 class="chart-title">Distribuição de Risco</h3><div style="position:relative;flex:1;min-height:0"><canvas id="chRisco"></canvas></div></div>
     <div class="chart-card span-2"><h3 class="chart-title">Evolução Mensal de Casos</h3><div style="position:relative;flex:1;min-height:0"><canvas id="chTimeline"></canvas></div></div>
-    <div class="chart-card span-2"><h3 class="chart-title">Safra de Resolução — Total, Mesmo Mês e Mês Seguinte</h3><div style="position:relative;flex:1;min-height:0"><canvas id="chCohort"></canvas></div></div>
     <div class="chart-card"><h3 class="chart-title">Carga de Trabalho (Casos Abertos)</h3><div style="position:relative;flex:1;min-height:0"><canvas id="chWorkload"></canvas></div></div>
     <div class="chart-card"><h3 class="chart-title">Visão SLA — Casos Abertos</h3><div style="position:relative;flex:1;min-height:0"><canvas id="chSla"></canvas></div></div>
     <div class="chart-card"><h3 class="chart-title">Distribuição por Status</h3><div style="position:relative;flex:1;min-height:0"><canvas id="chStatus"></canvas></div></div>
@@ -1818,121 +2786,8 @@ function renderCharts(cases){
   const rLabels=Object.keys(riscoCount);
   makeChart('chRisco',{type:'bar',data:{labels:rLabels,datasets:[{data:rLabels.map(r=>riscoCount[r]),backgroundColor:rLabels.map(r=>RISCO_COLORS[r]||'#94a3b8')}]},options:{plugins:{legend:{display:false},datalabels:badgeLabels((ctx)=>darkenColor(ctx.dataset.backgroundColor[ctx.dataIndex]),{anchor:'end',align:'end',offset:4})}}});
 
-  makeChart('chTimeline',{type:'line',data:{labels:timeline.map(t=>t.month),datasets:[{label:'Entradas (Data Combinada)',data:timeline.map(t=>t.criados),borderColor:'hsl(217,60%,62%)',backgroundColor:'hsla(217,60%,62%,0.15)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(217,60%,62%)'),{anchor:'end',align:'top',offset:4})},{label:'Resolvidos',data:timeline.map(t=>t.resolvidos),borderColor:'hsl(142,45%,55%)',backgroundColor:'hsla(142,45%,55%,0.14)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(142,45%,55%)'),{anchor:'end',align:'top',offset:4})},{label:'COAF',data:timeline.map(t=>t.coaf),borderColor:'hsl(263,45%,64%)',backgroundColor:'hsla(263,45%,64%,0.15)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(263,45%,64%)'),{anchor:'end',align:'top',offset:4})}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
+  makeChart('chTimeline',{type:'line',data:{labels:timeline.map(t=>t.month),datasets:[{label:'Entradas (Data Combinada)',data:timeline.map(t=>t.criados),borderColor:'hsl(217,60%,62%)',backgroundColor:'hsla(217,60%,62%,0.15)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(217,60%,62%)'),{anchor:'end',align:'top',offset:4})},{label:'Resolvidos',data:timeline.map(t=>t.resolvidos),borderColor:'hsl(142,45%,55%)',backgroundColor:'hsla(142,45%,55%,0.14)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(142,45%,55%)'),{anchor:'end',align:'top',offset:4})}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
 
-  if(cohort.length){
-    makeChart('chCohort',{
-      type:'bar',
-      data:{
-        labels:cohort.map(t=>t.monthLabel),
-        datasets:[
-          {
-            label:'Resolvidos no mesmo mês',
-            data:cohort.map(t=>t.sameMonth),
-            backgroundColor:'hsl(142,45%,55%)',
-            stack:'cohort',
-            datalabels:{
-              color:'#ffffff',
-              backgroundColor:'hsl(142,45%,38%)',
-              borderRadius:6,
-              padding:{top:2,right:6,bottom:2,left:6},
-              font:{size:11,weight:'700'},
-              formatter:(v)=>v>0?v:'',
-              anchor:'center',
-              align:'center',
-              clamp:true
-            }
-          },
-          {
-            label:'Resolvidos no mês seguinte',
-            data:cohort.map(t=>t.nextMonth),
-            backgroundColor:'hsl(38,90%,62%)',
-            stack:'cohort',
-            datalabels:{
-              color:'#111827',
-              backgroundColor:'hsl(38,88%,48%)',
-              borderRadius:6,
-              padding:{top:2,right:6,bottom:2,left:6},
-              font:{size:11,weight:'700'},
-              formatter:(v)=>v>0?v:'',
-              anchor:'center',
-              align:'center',
-              clamp:true
-            }
-          },
-          {
-            label:'Resolvidos depois / em aberto',
-            data:cohort.map(t=>t.otherOrOpen),
-            backgroundColor:'hsla(215,20%,65%,0.85)',
-            stack:'cohort',
-            datalabels:{
-              color:'#ffffff',
-              backgroundColor:'hsl(215,18%,38%)',
-              borderRadius:6,
-              padding:{top:2,right:6,bottom:2,left:6},
-              font:{size:11,weight:'700'},
-              formatter:(v)=>v>0?v:'',
-              anchor:'center',
-              align:'center',
-              clamp:true
-            }
-          },
-          {
-            label:'Total da safra',
-            data:cohort.map(t=>t.total),
-            backgroundColor:'rgba(0,0,0,0)',
-            borderWidth:0,
-            stack:'totals',
-            datalabels:{
-              color:'#ffffff',
-              backgroundColor:'hsl(217,60%,42%)',
-              borderRadius:6,
-              padding:{top:2,right:6,bottom:2,left:6},
-              font:{size:11,weight:'700'},
-              formatter:(v)=>v>0?`Total ${v}`:'',
-              anchor:'end',
-              align:'end',
-              offset:4,
-              clip:false
-            }
-          }
-        ]
-      },
-      options:{
-        plugins:{
-          legend:{position:'bottom',labels:{font:{size:11},generateLabels(chart){const labels=Chart.defaults.plugins.legend.labels.generateLabels(chart);return labels.map(label=>label.text==='Total da safra'?{...label,fillStyle:'hsl(217,60%,42%)',strokeStyle:'hsl(217,60%,42%)',lineWidth:0}:label);}}},
-          tooltip:{
-            callbacks:{
-              afterBody(items){
-                const i = items[0]?.dataIndex ?? 0;
-                const row = cohort[i];
-                if(!row) return '';
-                return [
-                  `Criados na safra: ${row.total}`,
-                  `Resolvidos no mesmo mês: ${row.sameMonth}`,
-                  `Resolvidos no mês seguinte: ${row.nextMonth}`,
-                  `Resolvidos depois / em aberto: ${row.otherOrOpen}`,
-                  'Referência: Data Combinada (Transação+Criação)'
-                ];
-              }
-            }
-          }
-        },
-        scales:{
-          x:{stacked:true,ticks:{font:{size:10}}},
-          y:{stacked:true,beginAtZero:true,ticks:{font:{size:11}}}
-        }
-      }
-    });
-  } else {
-    const cohortCanvas = document.getElementById('chCohort');
-    if (cohortCanvas) {
-      const card = cohortCanvas.closest('.chart-card');
-      if (card) card.innerHTML = '<h3 class="chart-title">Safra de Resolução — Total, Mesmo Mês e Mês Seguinte</h3><div style="color:var(--muted-fg);font-size:0.8rem;padding:1rem 0">Nenhum caso encontrado para o filtro específico da safra.</div>';
-    }
-  }
-
-  // Gráfico de carga de trabalho: ajuste de rotação dos rótulos para 45° e aumento de altura já aplicado via canvas height
   makeChart('chWorkload',{type:'bar',data:{labels:wlSorted.map(w=>w[0].split(' ').slice(0,2).join(' ')),datasets:[{data:wlSorted.map(w=>w[1]),backgroundColor:'hsla(215,35%,62%,0.60)'}]},options:{plugins:{legend:{display:false},datalabels:badgeLabels(()=>darkenColor('hsl(215,35%,62%)'),{anchor:'end',align:'end',offset:4})},scales:{x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}},y:{ticks:{font:{size:11}}}}}});
   makeChart('chSla',{type:'bar',data:{labels:['Estourado','Em Risco','No Prazo'],datasets:[{data:[breached,warning,ok],backgroundColor:['hsl(0,70%,60%)','hsl(38,90%,62%)','hsl(142,45%,55%)']}]},options:{plugins:{legend:{display:false},datalabels:badgeLabels((ctx)=>darkenColor(ctx.dataset.backgroundColor[ctx.dataIndex]),{anchor:'end',align:'end',offset:4})}}});
   makeChart('chStatus',{type:'bar',data:{labels:['Abertos','COAF','Concluídos'],datasets:[{data:[statusD.open,statusD.coaf,statusD.closed],backgroundColor:['hsl(217,60%,62%)','hsl(263,45%,64%)','hsl(142,45%,55%)']}]},options:{plugins:{legend:{display:false},datalabels:badgeLabels((ctx)=>darkenColor(ctx.dataset.backgroundColor[ctx.dataIndex]),{anchor:'end',align:'end',offset:4})}}});
@@ -2230,7 +3085,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  let theme = localStorage.getItem('theme') || 'light';
+  let theme = localStorage.getItem('theme') || 'dark';
   applyTheme(theme);
 
   btn.addEventListener('click', function(){
@@ -2250,6 +3105,7 @@ makeChart = function(canvasId, config){
     config.options.plugins = config.options.plugins || {};
     config.options.plugins.datalabels = { ...Chart.defaults.plugins.datalabels, color: '#e5e7eb' };
   }
+  // badges fixas — sem injeção dinâmica necessária
   return __makeChartDarkFix(canvasId, config);
 };
 
@@ -2271,8 +3127,7 @@ function applyChartThemeColors(){
   const gridColor = isDark ? 'rgba(148,163,184,0.25)' : 'rgba(100,116,139,0.25)';
   Chart.defaults.color = textColor;
   Chart.defaults.borderColor = gridColor;
-  Chart.defaults.plugins = Chart.defaults.plugins || {};
-  Chart.defaults.plugins.datalabels = { ...(Chart.defaults.plugins.datalabels || {}), color: textColor };
+  // NÃO definir Chart.defaults.plugins.datalabels.color — cada gráfico tem cor fixa definida
   if (typeof chartInstances !== 'undefined' && chartInstances && chartInstances.length){
     chartInstances.forEach((c)=>{
       if (c.options && c.options.scales){
@@ -2284,8 +3139,7 @@ function applyChartThemeColors(){
       if (!c.options.plugins) c.options.plugins = {};
       if (!c.options.plugins.legend) c.options.plugins.legend = {};
       c.options.plugins.legend.labels = { ...(c.options.plugins.legend.labels||{}), color: textColor };
-      if (!c.options.plugins.datalabels) c.options.plugins.datalabels = {};
-      c.options.plugins.datalabels.color = textColor;
+      // NÃO sobrescrever datalabels.color — todas as badges têm cores fixas definidas por gráfico
       try { c.update(); } catch(e) {}
     });
   }
@@ -2320,6 +3174,56 @@ if (document.readyState === 'loading') {
 } else {
   bindTabs();
 }
+
+// ── PLUGIN: total label on top of every stacked bar ──────────────────────────
+Chart.register({
+  id: 'stackedTotalLabel',
+  afterDatasetsDraw(chart) {
+    const stacked = chart.options?.scales?.y?.stacked || chart.options?.scales?.x?.stacked;
+    if (!stacked) return;
+    const { ctx, data } = chart;
+    const isHorizontal = chart.options?.indexAxis === 'y';
+
+    // Sum totals per index
+    const totals = {};
+    chart.data.datasets.forEach((ds, di) => {
+      if (ds.type === 'line') return; // skip line datasets
+      (ds.data || []).forEach((v, i) => {
+        totals[i] = (totals[i] || 0) + (Number(v) || 0);
+      });
+    });
+
+    ctx.save();
+    ctx.font = 'bold 11px sans-serif';
+    const style = getComputedStyle(document.documentElement);
+const foreground = style.getPropertyValue('--foreground').trim();
+ctx.fillStyle = foreground || '#e5e7eb';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+
+    // Find the last visible dataset (non-line) to position label
+    const lastDs = [...chart.data.datasets].reverse().find(ds => ds.type !== 'line');
+    if (!lastDs) { ctx.restore(); return; }
+    const lastDsIndex = chart.data.datasets.indexOf(lastDs);
+    const meta = chart.getDatasetMeta(lastDsIndex);
+
+    meta.data.forEach((bar, i) => {
+      const total = totals[i];
+      if (!total) return;
+      const label = total.toLocaleString('pt-BR');
+      if (isHorizontal) {
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, bar.x + 6, bar.y);
+      } else {
+        const { x, y } = bar;
+        ctx.fillText(label, x, y - 4);
+      }
+    });
+    ctx.restore();
+  }
+});
+
 </script>
 </body>
 </html>
