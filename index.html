@@ -54,12 +54,12 @@ h1{font-size:1.125rem;font-weight:700} .subtitle{font-size:0.75rem;color:var(--m
 .update-banner{font-size:0.75rem;padding:0.25rem 0.75rem;border-radius:20px;background:var(--update-badge-bg);color:var(--update-badge-color);display:inline-flex;align-items:center;gap:0.5rem;white-space:nowrap}
 .update-banner.warning{background:var(--update-badge-warning-bg);color:var(--update-badge-warning-color)}
 main{padding:1.5rem 0}main>*+*{margin-top:1.5rem}
-.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:2rem;text-align:center;cursor:pointer;transition:all .2s margin-bottom: 2rem !important; margin-top: 1rem !important;}
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:2rem;text-align:center;cursor:pointer;transition:all .2s}
 .upload-zone:hover{border-color:var(--link-color);background:hsla(215,50%,23%,0.05)}
-.filters{display:flex;gap:0.75rem;flex-wrap:wrap margin-bottom: 1.5rem !important;}
+.filters{display:flex;gap:0.75rem;flex-wrap:wrap}
 .filter-select,.filter-input{height:36px;border:1px solid var(--border);border-radius:8px;padding:0 0.75rem;font-size:0.75rem;background:var(--card);outline:none}
 .filter-select:focus,.filter-input:focus{border-color:var(--link-color)}
-
+.tabs-container{display:flex;gap:0.5rem;margin-bottom:1.5rem;border-bottom:2px solid var(--border);padding-bottom:0}
 .tab-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1.5rem;font-size:0.875rem;font-weight:600;background:transparent;border:none;cursor:pointer;border-radius:8px 8px 0 0;transition:all 0.2s;color:var(--muted-fg)}
 .tab-btn svg{width:18px;height:18px;stroke-width:1.8}
 .tab-btn:hover{background:var(--muted);color:var(--foreground)}
@@ -67,7 +67,7 @@ main{padding:1.5rem 0}main>*+*{margin-top:1.5rem}
 .tab-btn.active svg{stroke:white}
 .tab-content{display:none}
 .tab-content.active{display:block}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:1.5rem margin-bottom: 2rem !important;}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:1.5rem}
 .kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem;text-align:center;transition:transform .18s ease, box-shadow .18s ease}
 .kpi-card:hover{transform:translateY(-2px) scale(1.02)}
 .kpi-value{font-size:1.875rem;font-weight:800;letter-spacing:-0.025em}
@@ -76,17 +76,17 @@ main{padding:1.5rem 0}main>*+*{margin-top:1.5rem}
 .trend-up{color:var(--trend-up)}
 .trend-down{color:var(--trend-down)}
 .trend-stable{color:var(--trend-stable)}
-.charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2rem}
+.charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
 @media(max-width:768px){.charts-grid{grid-template-columns:1fr}}
 .chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem;box-shadow:0 1px 3px rgba(0,0,0,0.04);cursor:pointer;transition:all 0.2s}
 .chart-card:hover{transform:scale(1.01);box-shadow:0 4px 12px rgba(0,0,0,0.1)}
 .chart-card.span-2{grid-column:span 2}
 @media(max-width:768px){.chart-card.span-2{grid-column:span 1}}
 .chart-title{font-size:0.875rem;font-weight:600;margin-bottom:1rem}
-.sla-alerts-panel{display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem margin-bottom: 2rem !important;}
+.sla-alerts-panel{display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem}
 .sla-alerts-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
 .sla-alert-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem;overflow:hidden}
-.sla-alert-title{font-size:0.875rem;font-weight:700;margin-bottom:0.75rem;padding-bottom:0.5rem;display:flex;align-items:center;gap:0.5rem}
+.sla-alert-title{font-size:0.875rem;font-weight:700;margin-bottom:0.75rem;padding-bottom:0.5rem;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:0.5rem}
 .sla-alert-title svg{width:18px;height:18px;stroke-width:1.8}
 .sla-alert-list{max-height:300px;overflow-y:auto;font-size:0.75rem}
 .sla-alert-item{padding:0.5rem;border-bottom:1px solid var(--muted);display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap}
@@ -340,99 +340,13 @@ a:hover{color:var(--link-hover)}
 
 /* NOVAS REGRAS PARA GARANTIR ESPAÇO DOS GRÁFICOS */
 .charts-grid .chart-card {
-  min-height: 400px;
+  min-height: 260px;
   display: flex;
   flex-direction: column;
- min-height: 400px;}
-
+}
 .charts-grid canvas {
-  width: 100% !important;
-  height: 100% !important;
-}
-
-
-
-
-/* Ensure the margins for tabs/filters inside don't break the sticky look */
-
-
-
-
-/* ESPECIFICO PARA MANTER AS CAIXAS SEPARADAS NA ROLAGEM */
-.kpi-grid { margin-bottom: 2rem !important; }
-.comparison-cards { margin-bottom: 2.5rem !important; }
-.sla-alerts-panel { margin-bottom: 2.5rem !important; margin-top: 1rem !important; }
-#tablePanel { margin-bottom: 3rem !important; }
-#personPanel { margin-bottom: 2.5rem !important; }
-
-
-
-.sticky-controls .filters { margin-bottom: 0.75rem !important; }
-/* E DEVOLVEMOS A BORDA PARA O CONTAINER DOS BOTÕES COM MARGEM ZERO PRA BAIXO! */
-.sticky-controls 
-.tab-btn {
-  margin-bottom: -2px; /* O PULO DO GATO: o botão entra 2 pixels pra baixo tapando e conectando com a linha! */
-}
-
-
-.sticky-controls {
-  position: sticky;
-  top: 72px;
-  z-index: 19;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.10);
-  padding: 0.85rem;
-  margin-bottom: 1rem;
-}
-
-
-/* O QUE CRIA A LINHA É EXCLUSIVAMENTE O TABS-CONTAINER */
-.tabs-container {
-  display: flex !important;
-  gap: 0.5rem !important;
-  border-bottom: 2px solid var(--border) !important;
-  margin-bottom: 0 !important;
-  padding-bottom: 0 !important;
-  align-items: stretch !important; /* Estica os botões para grudarem embaixo */
-}
-
-/* OS BOTÕES DEVEM TOCAR O FUNDO */
-.tab-btn {
-  margin-bottom: -2px !important; /* Sobretém a linha de 2px */
-  border: 1px solid transparent; 
-  border-bottom: none;
-}
-
-
-.sticky-controls {
-  position: sticky;
-  top: 72px;
-  z-index: 15;
-  background: var(--background);
-  padding-top: 1rem;
-  padding-bottom: 0.75rem;
-  margin-bottom: 1rem;
-}
-.tabs-container {
-  display: flex !important;
-  gap: 0.5rem !important;
-  margin-bottom: 1.5rem !important;
-  border-bottom: 2px solid var(--border) !important;
-  padding-bottom: 0 !important;
-}
-.tab-btn {
-  margin-bottom: -2px !important;
-}
-
-
-.sticky-controls .filters {
-  margin-top: 0 !important;
-  margin-bottom: 0.75rem !important;
-}
-.sticky-controls .filters:last-child {
-  margin-bottom: 0 !important;
+  flex: 1;
+  width: 100%;
 }
 
 </style>
@@ -459,10 +373,8 @@ a:hover{color:var(--link-hover)}
     <p style="font-size:0.75rem;color:var(--muted-fg)">Arraste ou clique para atualizar (formato .xlsx do Jira)</p>
     <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none">
   </div>
-  <div class="sticky-controls">
   <div id="filtersSection" class="filters" style="display:none"></div>
   <div id="dateFilters" class="filters" style="display:none"></div>
-  </div>
   <div class="tabs-container">
     <button class="tab-btn active" type="button" data-tab="operacional"><span>Operacional</span></button>
     <button class="tab-btn" type="button" data-tab="graficos"><span>Gerencial</span></button>
@@ -667,13 +579,6 @@ function hideUpdateBanner() {
   if (bannerDiv) bannerDiv.style.display = 'none';
 }
 
-// Verifica a atualizacao do banner periodicamente
-setInterval(function() {
-  const ts = localStorage.getItem(STORAGE_TIMESTAMP_KEY);
-  if (ts) updateLastUpdateBanner(ts);
-}, 60000);
-
-
 // ==================== FUNÇÕES SLA ====================
 function isOpen(s){return OPEN_STATUSES.includes(s)}
 function isCoaf(s){return COAF_STATUSES.includes(s)}
@@ -731,7 +636,6 @@ function getSlaRefDate(c){
 
 function getSlaRemainingDays(c){
   if(!isOpen(c.status)) return null;
-  if(c.tipo === "KYP Afiliados" && c.status === "Em Espera") return null; /* Remove do quadro de alertas! */
   
   const ref = getSlaRefDate(c);
   if(!ref) return null;
@@ -761,7 +665,6 @@ function getSlaRemainingDays(c){
 
 function getSlaStatus(c){
   if(!isOpen(c.status)) return "resolved";
-  if(c.tipo === "KYP Afiliados" && c.status === "Em Espera") return "paused";
   const remaining = getSlaRemainingDays(c);
   if(remaining === null) return "ok";
   if(remaining < 0) return "breached";
@@ -804,15 +707,6 @@ function getDataVencimento(c) {
 }
 
 function getSlaDisplay(c) {
-  if (c.tipo === "KYP Afiliados" && c.status === "Em Espera") {
-    return {
-      status: "paused",
-      text: "Em Espera",
-      badge: "badge-risk-med",
-      display: "⏳ Em Espera",
-      tooltip: "SLA em espera"
-    };
-  }
   const isKYP = c.tipo === "KYP / Background Check" || c.tipo === "KYP / Monitoramento" || c.tipo === "KYP Afiliados";
   const slaStatus = getSlaStatus(c);
   const remaining = getSlaRemainingDays(c);
@@ -896,7 +790,7 @@ function getStatusCategory(s){
 function fmtDate(d){if(!d)return"—";const dt=new Date(d);if(isNaN(dt))return"—";return dt.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"2-digit"})}
 function fmtNum(n){return n.toLocaleString("pt-BR")}
 
-// ==================== EXTRAÇíO ====================
+// ==================== EXTRAÇÃO ====================
 function extractCPF(text) {
   if (!text) return null;
   let match = text.match(/\b\d{11}\b/);
@@ -1368,7 +1262,7 @@ function updateComparisonCards(cases){
 }
 
 
-/* ========= MODAL DE GRÁFICO (VERSíO ESTÁVEL FINAL) ========= */
+/* ========= MODAL DE GRÁFICO (VERSÃO ESTÁVEL FINAL) ========= */
 
 let modalChart = null;
 
@@ -1454,14 +1348,8 @@ modalChart = new Chart(modalCanvas, {
       if (!elements.length) return;
 
       const index = elements[0].index;
-      const clickedLabel = this.data.labels[index];
-      const title = (modalTitle.textContent || '').toLowerCase();
-      if(title.includes('tipo')) applyChartFilter('tipo', clickedLabel);
-      else if(title.includes('risco')) applyChartFilter('risco', clickedLabel);
-      else if(title.includes('status')) applyChartFilter('status', clickedLabel);
-      else if(title.includes('sla')) applyChartFilter('sla', clickedLabel);
-      else if(title.includes('carga de trabalho')) applyChartFilter('responsavel', clickedLabel);
-      else applyChartFilter('timeline', clickedLabel);
+      filters.text = this.data.labels[index];
+      renderAll();
 
       const btnClear = document.getElementById('btnClearChartFilter');
       if (btnClear) btnClear.style.display = 'inline-flex';
@@ -1586,89 +1474,6 @@ function applyFilters(cases,f){
 function getFacetSubset(){
   const f = { ...filters, subtipoPLD:'', risco:'', responsavel:'', status:'', sla:'' };
   return applyFilters(allCases, f);
-}
-
-
-function applyChartFilter(kind, value){
-  if(value === undefined || value === null) return;
-  const raw = String(value).trim();
-  if(!raw) return;
-
-  const riskMap = { 'alto':'Alto', 'médio':'Médio', 'medio':'Médio', 'baixo':'Baixo' };
-
-  switch(kind){
-    case 'tipo':
-      filters.tipo = raw;
-      break;
-    case 'risco':
-      filters.risco = riskMap[raw.toLowerCase()] || raw;
-      break;
-    case 'status': {
-      const t = raw.toLowerCase();
-      if(t.includes('aberto')) filters.status = 'open';
-      else if(t.includes('conclu')) filters.status = 'closed';
-      else if(t.includes('coaf')) filters.status = 'coaf';
-      else filters.status = raw;
-      break;
-    }
-    case 'responsavel':
-      filters.responsavel = raw;
-      break;
-    case 'sla': {
-      const t = raw.toLowerCase();
-      if(t.includes('estour')) filters.sla = 'breached';
-      else if(t.includes('risco')) filters.sla = 'warning';
-      else if(t.includes('prazo')) filters.sla = 'ok';
-      else if(t.includes('resol')) filters.sla = 'resolved';
-      else filters.sla = raw;
-      break;
-    }
-    case 'timeline': {
-      const m = raw.match(/^(\d{2})\/(\d{4})$/);
-      if(m){
-        const mm = m[1], yyyy = m[2];
-        filters.dateField = 'criado';
-        filters.dateStart = `${yyyy}-${mm}-01`;
-        const lastDay = new Date(Number(yyyy), Number(mm), 0).getDate();
-        filters.dateEnd = `${yyyy}-${mm}-${String(lastDay).padStart(2,'0')}`;
-        const ds = document.getElementById('dateStart'); if(ds) ds.value = filters.dateStart;
-        const de = document.getElementById('dateEnd'); if(de) de.value = filters.dateEnd;
-      } else {
-        filters.text = raw;
-      }
-      break;
-    }
-    case 'cohort':
-      filters.text = raw;
-      break;
-    case 'resolucao':
-      filters.text = raw;
-      break;
-    default:
-      filters.text = raw;
-  }
-
-  tablePage = 0;
-  switchTab('operacional');
-  renderAll();
-}
-
-function enhanceChartClick(chart, kind){
-  if(!chart) return chart;
-  const prev = chart.options.onClick;
-  chart.options.onClick = function(evt, elements){
-    if(elements && elements.length){
-      const idx = elements[0].index;
-      const label = this.data.labels[idx];
-      applyChartFilter(kind, label);
-      const btnClear = document.getElementById('btnClearChartFilter');
-      if (btnClear) btnClear.style.display = 'inline-flex';
-      return;
-    }
-    if(typeof prev === 'function') prev.call(this, evt, elements);
-  };
-  chart.update();
-  return chart;
 }
 
 // ==================== RENDER ====================
@@ -1837,9 +1642,6 @@ function makeChart(canvasId,config){
   if(!hasChartLib()) return null;
   const ctx=document.getElementById(canvasId);
   if(!ctx)return null;
-  if(!config.options) config.options={};
-  config.options.maintainAspectRatio = false;
-  config.options.responsive = true;
   const chart=new Chart(ctx,config);
   chartInstances.push(chart);
   return chart;
@@ -1901,28 +1703,28 @@ function renderCharts(cases){
   const resTrend=getResTrend(cases);
   const cohort=getResolutionCohort(cohortCases);
 
-  // ALTERAÇíO: aumentada a altura dos últimos 4 gráficos para 150px
+  // ALTERAÇÃO: aumentada a altura dos últimos 4 gráficos para 150px
   grid.innerHTML=`
-    <div class="chart-card"><h3 class="chart-title">Casos por Tipo</h3><div style="position:relative;flex:1;min-height:0"><canvas id="chTipo"></canvas></div></div>
-    <div class="chart-card"><h3 class="chart-title">Distribuição de Risco</h3><div style="position:relative;flex:1;min-height:0"><canvas id="chRisco"></canvas></div></div>
-    <div class="chart-card span-2"><h3 class="chart-title">Evolução Mensal de Casos</h3><div style="position:relative;flex:1;min-height:0"><canvas id="chTimeline"></canvas></div></div>
-    <div class="chart-card span-2"><h3 class="chart-title">Safra de Resolução — Total, Mesmo Mês e Mês Seguinte</h3><div style="position:relative;flex:1;min-height:0"><canvas id="chCohort"></canvas></div></div>
-    <div class="chart-card"><h3 class="chart-title">Carga de Trabalho (Casos Abertos)</h3><div style="position:relative;flex:1;min-height:0"><canvas id="chWorkload"></canvas></div></div>
-    <div class="chart-card"><h3 class="chart-title">Visão SLA — Casos Abertos</h3><div style="position:relative;flex:1;min-height:0"><canvas id="chSla"></canvas></div></div>
-    <div class="chart-card"><h3 class="chart-title">Distribuição por Status</h3><div style="position:relative;flex:1;min-height:0"><canvas id="chStatus"></canvas></div></div>
-    <div class="chart-card"><h3 class="chart-title">Tempo Médio de Resolução (dias)</h3><div style="position:relative;flex:1;min-height:0"><canvas id="chRes"></canvas></div></div>
-`;
+    <div class="chart-card"><h3 class="chart-title">Casos por Tipo</h3><canvas id="chTipo" height="80"></canvas></div>
+    <div class="chart-card"><h3 class="chart-title">Distribuição de Risco</h3><canvas id="chRisco" height="80"></canvas></div>
+    <div class="chart-card span-2"><h3 class="chart-title">Evolução Mensal de Casos</h3><canvas id="chTimeline" height="80"></canvas></div>
+    <div class="chart-card span-2"><h3 class="chart-title">Safra de Resolução — Total, Mesmo Mês e Mês Seguinte</h3><canvas id="chCohort" height="80"></canvas></div>
+    <div class="chart-card"><h3 class="chart-title">Carga de Trabalho (Casos Abertos)</h3><canvas id="chWorkload" height="150"></canvas></div>
+    <div class="chart-card"><h3 class="chart-title">Visão SLA — Casos Abertos</h3><canvas id="chSla" height="150"></canvas></div>
+    <div class="chart-card"><h3 class="chart-title">Distribuição por Status</h3><canvas id="chStatus" height="150"></canvas></div>
+    <div class="chart-card"><h3 class="chart-title">Tempo Médio de Resolução (dias)</h3><canvas id="chRes" height="150"></canvas></div>
+  `;
 
   const tipoLabels=Object.keys(tipoCount);
-  enhanceChartClick(makeChart('chTipo',{type:'bar',data:{labels:tipoLabels,datasets:[{data:tipoLabels.map(t=>tipoCount[t]),backgroundColor:tipoLabels.map(t=>TIPO_COLORS[t]||'#94a3b8')}]},options:{indexAxis:'y',plugins:{legend:{display:false},datalabels:badgeLabels((ctx)=>darkenColor(ctx.dataset.backgroundColor[ctx.dataIndex]),{anchor:'end',align:'right',offset:4})},scales:{x:{ticks:{font:{size:11}}},y:{ticks:{font:{size:10}}}}}}), 'tipo');
+  makeChart('chTipo',{type:'bar',data:{labels:tipoLabels,datasets:[{data:tipoLabels.map(t=>tipoCount[t]),backgroundColor:tipoLabels.map(t=>TIPO_COLORS[t]||'#94a3b8')}]},options:{indexAxis:'y',plugins:{legend:{display:false},datalabels:badgeLabels((ctx)=>darkenColor(ctx.dataset.backgroundColor[ctx.dataIndex]),{anchor:'end',align:'right',offset:4})},scales:{x:{ticks:{font:{size:11}}},y:{ticks:{font:{size:10}}}}}});
 
   const rLabels=Object.keys(riscoCount);
-  enhanceChartClick(makeChart('chRisco',{type:'bar',data:{labels:rLabels,datasets:[{data:rLabels.map(r=>riscoCount[r]),backgroundColor:rLabels.map(r=>RISCO_COLORS[r]||'#94a3b8')}]},options:{plugins:{legend:{display:false},datalabels:badgeLabels((ctx)=>darkenColor(ctx.dataset.backgroundColor[ctx.dataIndex]),{anchor:'end',align:'end',offset:4})}}}), 'risco');
+  makeChart('chRisco',{type:'bar',data:{labels:rLabels,datasets:[{data:rLabels.map(r=>riscoCount[r]),backgroundColor:rLabels.map(r=>RISCO_COLORS[r]||'#94a3b8')}]},options:{plugins:{legend:{display:false},datalabels:badgeLabels((ctx)=>darkenColor(ctx.dataset.backgroundColor[ctx.dataIndex]),{anchor:'end',align:'end',offset:4})}}});
 
-  enhanceChartClick(makeChart('chTimeline',{type:'line',data:{labels:timeline.map(t=>t.month),datasets:[{label:'Criados',data:timeline.map(t=>t.criados),borderColor:'hsl(217,60%,62%)',backgroundColor:'hsla(217,60%,62%,0.15)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(217,60%,62%)'),{anchor:'end',align:'top',offset:4})},{label:'Resolvidos',data:timeline.map(t=>t.resolvidos),borderColor:'hsl(142,45%,55%)',backgroundColor:'hsla(142,45%,55%,0.14)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(142,45%,55%)'),{anchor:'end',align:'top',offset:4})},{label:'COAF',data:timeline.map(t=>t.coaf),borderColor:'hsl(263,45%,64%)',backgroundColor:'hsla(263,45%,64%,0.15)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(263,45%,64%)'),{anchor:'end',align:'top',offset:4})}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}}), 'timeline');
+  makeChart('chTimeline',{type:'line',data:{labels:timeline.map(t=>t.month),datasets:[{label:'Criados',data:timeline.map(t=>t.criados),borderColor:'hsl(217,60%,62%)',backgroundColor:'hsla(217,60%,62%,0.15)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(217,60%,62%)'),{anchor:'end',align:'top',offset:4})},{label:'Resolvidos',data:timeline.map(t=>t.resolvidos),borderColor:'hsl(142,45%,55%)',backgroundColor:'hsla(142,45%,55%,0.14)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(142,45%,55%)'),{anchor:'end',align:'top',offset:4})},{label:'COAF',data:timeline.map(t=>t.coaf),borderColor:'hsl(263,45%,64%)',backgroundColor:'hsla(263,45%,64%,0.15)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(263,45%,64%)'),{anchor:'end',align:'top',offset:4})}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
 
   if(cohort.length){
-    enhanceChartClick(makeChart('chCohort',{
+    makeChart('chCohort',{
       type:'bar',
       data:{
         labels:cohort.map(t=>t.monthLabel),
@@ -2024,7 +1826,7 @@ function renderCharts(cases){
           y:{stacked:true,beginAtZero:true,ticks:{font:{size:11}}}
         }
       }
-    }), 'cohort');
+    });
   } else {
     const cohortCanvas = document.getElementById('chCohort');
     if (cohortCanvas) {
@@ -2034,10 +1836,10 @@ function renderCharts(cases){
   }
 
   // Gráfico de carga de trabalho: ajuste de rotação dos rótulos para 45° e aumento de altura já aplicado via canvas height
-  enhanceChartClick(makeChart('chWorkload',{type:'bar',data:{labels:wlSorted.map(w=>w[0].split(' ').slice(0,2).join(' ')),datasets:[{data:wlSorted.map(w=>w[1]),backgroundColor:'hsla(215,35%,62%,0.60)'}]},options:{plugins:{legend:{display:false},datalabels:badgeLabels(()=>darkenColor('hsl(215,35%,62%)'),{anchor:'end',align:'end',offset:4})},scales:{x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}},y:{ticks:{font:{size:11}}}}}}), 'responsavel');
-  enhanceChartClick(makeChart('chSla',{type:'bar',data:{labels:['Estourado','Em Risco','No Prazo'],datasets:[{data:[breached,warning,ok],backgroundColor:['hsl(0,70%,60%)','hsl(38,90%,62%)','hsl(142,45%,55%)']}]},options:{plugins:{legend:{display:false},datalabels:badgeLabels((ctx)=>darkenColor(ctx.dataset.backgroundColor[ctx.dataIndex]),{anchor:'end',align:'end',offset:4})}}}), 'sla');
-  enhanceChartClick(makeChart('chStatus',{type:'bar',data:{labels:['Abertos','COAF','Concluídos'],datasets:[{data:[statusD.open,statusD.coaf,statusD.closed],backgroundColor:['hsl(217,60%,62%)','hsl(263,45%,64%)','hsl(142,45%,55%)']}]},options:{plugins:{legend:{display:false},datalabels:badgeLabels((ctx)=>darkenColor(ctx.dataset.backgroundColor[ctx.dataIndex]),{anchor:'end',align:'end',offset:4})}}}), 'status');
-  enhanceChartClick(makeChart('chRes',{type:'line',data:{labels:resTrend.map(r=>r.month),datasets:[{label:'Dias',data:resTrend.map(r=>r.avg),borderColor:'hsl(263,45%,64%)',backgroundColor:'hsl(263,45%,64%)',pointRadius:3,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(263,45%,64%)'),{anchor:'end',align:'top',offset:4})}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}}), 'resolucao');
+  makeChart('chWorkload',{type:'bar',data:{labels:wlSorted.map(w=>w[0].split(' ').slice(0,2).join(' ')),datasets:[{data:wlSorted.map(w=>w[1]),backgroundColor:'hsla(215,35%,62%,0.60)'}]},options:{plugins:{legend:{display:false},datalabels:badgeLabels(()=>darkenColor('hsl(215,35%,62%)'),{anchor:'end',align:'end',offset:4})},scales:{x:{ticks:{font:{size:9},maxRotation:45,autoSkip:true}},y:{ticks:{font:{size:11}}}}}});
+  makeChart('chSla',{type:'bar',data:{labels:['Estourado','Em Risco','No Prazo'],datasets:[{data:[breached,warning,ok],backgroundColor:['hsl(0,70%,60%)','hsl(38,90%,62%)','hsl(142,45%,55%)']}]},options:{plugins:{legend:{display:false},datalabels:badgeLabels((ctx)=>darkenColor(ctx.dataset.backgroundColor[ctx.dataIndex]),{anchor:'end',align:'end',offset:4})}}});
+  makeChart('chStatus',{type:'bar',data:{labels:['Abertos','COAF','Concluídos'],datasets:[{data:[statusD.open,statusD.coaf,statusD.closed],backgroundColor:['hsl(217,60%,62%)','hsl(263,45%,64%)','hsl(142,45%,55%)']}]},options:{plugins:{legend:{display:false},datalabels:badgeLabels((ctx)=>darkenColor(ctx.dataset.backgroundColor[ctx.dataIndex]),{anchor:'end',align:'end',offset:4})}}});
+  makeChart('chRes',{type:'line',data:{labels:resTrend.map(r=>r.month),datasets:[{label:'Dias',data:resTrend.map(r=>r.avg),borderColor:'hsl(263,45%,64%)',backgroundColor:'hsl(263,45%,64%)',pointRadius:3,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(263,45%,64%)'),{anchor:'end',align:'top',offset:4})}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
 }
 
 function getTimeline(cases){
@@ -2096,16 +1898,7 @@ function renderPersonPanel(cases){
   const panel=document.getElementById('personPanel');
   const corr=buildPersonCorrelations(cases);
   let filtered=corr;
-  if(personSearch){
-    const s=personSearch.toLowerCase();
-    filtered=filtered.filter(p=>{
-      const cpfs = p.cpfs ? [...p.cpfs].join(' ') : '';
-      const emails = p.emails ? [...p.emails].join(' ') : '';
-      const base = String(p.identifier || '').toLowerCase();
-      const cpfFmt = p.cpfs ? [...p.cpfs].map(formatCPF).join(' ').toLowerCase() : '';
-      return base.includes(s) || cpfs.toLowerCase().includes(s) || cpfFmt.includes(s) || emails.toLowerCase().includes(s);
-    })
-  }
+  if(personSearch){const s=personSearch.toLowerCase();filtered=filtered.filter(p=>p.identifier.includes(s))}
   
   // Função de ordenação genérica
   function sortPersons(a, b, field, dir) {
@@ -2152,11 +1945,11 @@ function renderPersonPanel(cases){
     <div><h3 class="chart-title" style="margin-bottom:0">Correlação por CPF / Pessoa</h3>
     <p class="subtitle" style="margin-top:0.25rem">${corr.length} pessoas · ${reincidentes.length} reincidentes · ${totalWithCoaf} com COAF · ${totalRecent} COAF &lt;6 meses</p></div>
     <div style="display:flex;gap:0.5rem">
-      <input type="text" class="filter-input" style="width:180px" placeholder="Buscar CPF ou email..." value="${personSearch}" oninput="personSearch=this.value;renderAll()">
+      <input type="text" class="filter-input" style="width:180px" placeholder="Buscar CPF..." value="${personSearch}" oninput="personSearch=this.value;renderAll()">
     </div></div>`;
   h+=`<div class="person-summary"><div class="mini-kpi"><div class="val">${corr.length}</div><div class="lbl">Pessoas</div></div><div class="mini-kpi"><div class="val" style="color:var(--risk-high)">${reincidentes.length}</div><div class="lbl">Reincidentes</div></div><div class="mini-kpi"><div class="val" style="color:var(--coaf)">${totalWithCoaf}</div><div class="lbl">Com COAF</div></div><div class="mini-kpi"><div class="val" style="color:var(--risk-med)">${totalRecent}</div><div class="lbl">COAF &lt;6m</div></div></div>`;
   h+=`<div class="table-wrap" style="max-height:360px;overflow-y:auto"><table class="data-table"><thead style="position:sticky;top:0;background:var(--card);z-index:5">
-    <th onclick="window.personSortField='identifier'; window.personSortDir=(window.personSortField==='identifier' && window.personSortDir==='asc')?'desc':'asc'; renderAll()">CPF + Email${sortArrow('identifier')}</th>
+    <th onclick="window.personSortField='identifier'; window.personSortDir=(window.personSortField==='identifier' && window.personSortDir==='asc')?'desc':'asc'; renderAll()">CPF/Email${sortArrow('identifier')}</th>
     <th onclick="window.personSortField='totalCases'; window.personSortDir=(window.personSortField==='totalCases' && window.personSortDir==='asc')?'desc':'asc'; renderAll()">Total${sortArrow('totalCases')}</th>
     <th onclick="window.personSortField='openCases'; window.personSortDir=(window.personSortField==='openCases' && window.personSortDir==='asc')?'desc':'asc'; renderAll()">Abertos${sortArrow('openCases')}</th>
     <th onclick="window.personSortField='closedCases'; window.personSortDir=(window.personSortField==='closedCases' && window.personSortDir==='asc')?'desc':'asc'; renderAll()">Encerrados${sortArrow('closedCases')}</th>
@@ -2170,16 +1963,11 @@ function renderPersonPanel(cases){
   
   showList.slice(0,100).forEach(p=>{
     const rClass=p.riskLevel==='Alto'?'badge-risk-high':p.riskLevel==='Médio'?'badge-risk-med':'badge-risk-low';
-    const cpfPrincipal = p.cpfs && p.cpfs.size ? [...p.cpfs][0] : (p.type==='cpf' ? p.identifier : null);
-    const emailPrincipal = p.emails && p.emails.size ? [...p.emails][0] : (p.type==='email' ? p.identifier : null);
-    const parts = [];
-    if (cpfPrincipal) parts.push(formatCPF(cpfPrincipal));
-    if (emailPrincipal) parts.push(emailPrincipal);
-    const displayId = parts.length ? parts.join(' · ') : p.identifier;
+    const displayId=p.type==='cpf'?formatCPF(p.identifier):p.identifier;
     const isExpanded = expandedPerson === p.identifier;
     
     h+=`<tr style="cursor:pointer" onclick="expandedPerson=expandedPerson==='${p.identifier}'?null:'${p.identifier}';renderAll()">
-      <td style="font-size:0.78rem;font-weight:500;color:var(--foreground)">${displayId}<\/td>
+      <td class="mono-id">${displayId}<\/td>
       <td style="font-weight:700">${p.totalCases}<\/td>
       <td><span class="badge badge-status-open">${p.openCases}<\/span><\/td>
       <td><span class="badge badge-status-done">${p.closedCases}<\/span><\/td>
@@ -2324,7 +2112,7 @@ document.addEventListener('DOMContentLoaded', () => {
   localStorage.setItem('theme', theme);
   applyTheme(theme);
   if (typeof applyChartThemeColors === 'function') { applyChartThemeColors(); }
-  setTimeout(function() { try { renderAll(); } catch(e) {} }, 50);
+  try { renderAll(); } catch(e) {}
 });
 })();
 
@@ -2386,14 +2174,6 @@ if (document.readyState === 'loading'){
 function switchTab(tabId) {
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabId));
   document.querySelectorAll('.tab-content').forEach(content => content.classList.toggle('active', content.id === `tab-${tabId}`));
-  // Quando muda de aba, se os gráficos ficarem visíveis eles precisam calcular as larguras e alturas da tela
-  if (tabId === 'graficos') {
-    setTimeout(() => {
-      if (typeof chartInstances !== 'undefined') {
-        chartInstances.forEach(c => c.resize());
-      }
-    }, 50);
-  }
 }
 
 function bindTabs(){
