@@ -1281,17 +1281,9 @@ function updateComparisonCards(cases){
     const anoAnterior = mesAtual === 0 ? anoAtual - 1 : anoAtual;
     
     // Criados
-    const criadosAtual = cases.filter(c => {
-      if(!c.criado) return false;
-      const d = new Date(c.criado);
-      return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
-    }).length;
+    const criadosAtual = cases.filter(c => { const dataRef = getCombinedDate(c); if(!dataRef) return false; const d = new Date(dataRef); return d.getMonth() === mesAtual && d.getFullYear() === anoAtual; }).length;
     
-    const criadosAnterior = cases.filter(c => {
-      if(!c.criado) return false;
-      const d = new Date(c.criado);
-      return d.getMonth() === mesAnterior && d.getFullYear() === anoAnterior;
-    }).length;
+    const criadosAnterior = cases.filter(c => { const dataRef = getCombinedDate(c); if(!dataRef) return false; const d = new Date(dataRef); return d.getMonth() === mesAnterior && d.getFullYear() === anoAnterior; }).length;
     
     // Resolvidos
     const resolvidosAtual = cases.filter(c => {
@@ -1309,7 +1301,7 @@ function updateComparisonCards(cases){
     // COAF: casos com status "Comunicação COAF" ou "Comunicado" que foram atualizados (ou criados) no mês
     const coafAtual = cases.filter(c => {
       if(!isCoaf(c.status)) return false;
-      const dataRef = c.atualizado || c.criado;
+      const dataRef = c.atualizado || getCombinedDate(c);
       if(!dataRef) return false;
       const d = new Date(dataRef);
       return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
@@ -1317,7 +1309,7 @@ function updateComparisonCards(cases){
     
     const coafAnterior = cases.filter(c => {
       if(!isCoaf(c.status)) return false;
-      const dataRef = c.atualizado || c.criado;
+      const dataRef = c.atualizado || getCombinedDate(c);
       if(!dataRef) return false;
       const d = new Date(dataRef);
       return d.getMonth() === mesAnterior && d.getFullYear() === anoAnterior;
@@ -1726,8 +1718,7 @@ function renderKPIs(cases){
   const coaf=cases.filter(c=>isCoaf(c.status)).length;
   const breached=cases.filter(c=>getSlaStatus(c)==="breached").length;
   const high=cases.filter(c=>c.risco==="Alto").length;
-  const resolved=cases.filter(c=>c.criado&&c.resolvido);
-  const avg=resolved.length?Math.round(resolved.reduce((s,c)=>s+(new Date(c.resolvido).getTime()-new Date(c.criado).getTime())/864e5,0)/resolved.length):0;
+  const resolved=cases.filter(c=>getCombinedDate(c)&&c.resolvido); const avg=resolved.length?Math.round(resolved.reduce((s,c)=>s+(new Date(c.resolvido).getTime()-new Date(getCombinedDate(c)).getTime())/864e5,0)/resolved.length):0;
   const kpis=[
     {v:fmtNum(cases.length),l:"Total de Casos",color:"var(--foreground)"},
     {v:fmtNum(open),l:"Abertos",color:"var(--status-open)"},
@@ -1827,7 +1818,7 @@ function renderCharts(cases){
   const rLabels=Object.keys(riscoCount);
   makeChart('chRisco',{type:'bar',data:{labels:rLabels,datasets:[{data:rLabels.map(r=>riscoCount[r]),backgroundColor:rLabels.map(r=>RISCO_COLORS[r]||'#94a3b8')}]},options:{plugins:{legend:{display:false},datalabels:badgeLabels((ctx)=>darkenColor(ctx.dataset.backgroundColor[ctx.dataIndex]),{anchor:'end',align:'end',offset:4})}}});
 
-  makeChart('chTimeline',{type:'line',data:{labels:timeline.map(t=>t.month),datasets:[{label:'Casos (Data Combinada)',data:timeline.map(t=>t.criados),borderColor:'hsl(217,60%,62%)',backgroundColor:'hsla(217,60%,62%,0.15)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(217,60%,62%)'),{anchor:'end',align:'top',offset:4})},{label:'Resolvidos',data:timeline.map(t=>t.resolvidos),borderColor:'hsl(142,45%,55%)',backgroundColor:'hsla(142,45%,55%,0.14)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(142,45%,55%)'),{anchor:'end',align:'top',offset:4})},{label:'COAF',data:timeline.map(t=>t.coaf),borderColor:'hsl(263,45%,64%)',backgroundColor:'hsla(263,45%,64%,0.15)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(263,45%,64%)'),{anchor:'end',align:'top',offset:4})}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
+  makeChart('chTimeline',{type:'line',data:{labels:timeline.map(t=>t.month),datasets:[{label:'Entradas (Data Combinada)',data:timeline.map(t=>t.criados),borderColor:'hsl(217,60%,62%)',backgroundColor:'hsla(217,60%,62%,0.15)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(217,60%,62%)'),{anchor:'end',align:'top',offset:4})},{label:'Resolvidos',data:timeline.map(t=>t.resolvidos),borderColor:'hsl(142,45%,55%)',backgroundColor:'hsla(142,45%,55%,0.14)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(142,45%,55%)'),{anchor:'end',align:'top',offset:4})},{label:'COAF',data:timeline.map(t=>t.coaf),borderColor:'hsl(263,45%,64%)',backgroundColor:'hsla(263,45%,64%,0.15)',fill:true,tension:0.3,datalabels:badgeLabels(()=>darkenColor('hsl(263,45%,64%)'),{anchor:'end',align:'top',offset:4})}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
 
   if(cohort.length){
     makeChart('chCohort',{
@@ -1976,11 +1967,7 @@ function getTimeline(cases){
   });
   return [...m.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([month,d])=>({month,...d}));
 }
-function getResTrend(cases){
-  const resolved=cases.filter(c=>c.criado&&c.resolvido);const m=new Map();
-  resolved.forEach(c=>{const d=new Date(c.resolvido);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const arr=m.get(k)||[];arr.push(Math.round((new Date(c.resolvido)-new Date(c.criado))/864e5));m.set(k,arr)});
-  return[...m.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([month,days])=>({month,avg:Math.round(days.reduce((s,d)=>s+d,0)/days.length)}));
-}
+function getResTrend(cases){ const resolved=cases.filter(c=>getCombinedDate(c)&&c.resolvido); const m=new Map(); resolved.forEach(c=>{ const d=new Date(c.resolvido); const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); const arr=m.get(k)||[]; arr.push(Math.round((new Date(c.resolvido)-new Date(getCombinedDate(c)))/864e5)); m.set(k,arr)}); return [...m.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([month,days])=>({month,avg:Math.round(days.reduce((s,d)=>s+d,0)/days.length)})); }
 
 function formatMonthKeyLabel(monthKey){
   const [year, month] = String(monthKey).split('-');
