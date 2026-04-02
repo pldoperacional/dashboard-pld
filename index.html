@@ -575,6 +575,12 @@ a:hover{color:var(--link-hover)}
     <div id="chartsGrid" class="charts-grid"></div>
 </div>
 <div id="tab-tendencias" class="tab-content">
+    <div id="trendFilters" class="filters" style="margin-bottom:1rem; display:flex; gap:1rem; align-items:center;">
+      <span class="subtitle">Analisar mês:</span>
+      <select id="trendMonthCurr" class="filter-select" onchange="window.trendCurrKey=this.value; renderTrendCards(applyFilters(allCases, filters))"></select>
+      <span class="subtitle">comparado com:</span>
+      <select id="trendMonthPrev" class="filter-select" onchange="window.trendPrevKey=this.value; renderTrendCards(applyFilters(allCases, filters))"></select>
+    </div>
     <div id="trendSummaryCard" class="chart-card" style="margin-bottom:1rem"></div>
     <div id="trendCardsGrid" class="kpi-grid" style="margin-bottom:1rem"></div>
     <div id="trendListsGrid" class="charts-grid"></div>
@@ -1622,6 +1628,8 @@ let expandedPerson=null;
 let personSortBy='totalCases';
 let personSearch='';
 let chartInstances=[];
+let trendCurrKey=null;
+let trendPrevKey=null;
 
 if (hasChartLib() && typeof ChartDataLabels !== 'undefined') { Chart.register(ChartDataLabels); }
 
@@ -1731,10 +1739,25 @@ function monthKeyFromDate(dateLike){
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
 }
 function getMonthlyTrendData(cases){
-  const now = new Date();
-  const currKey = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
-  const prevDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
-  const prevKey = prevDate.getFullYear() + '-' + String(prevDate.getMonth()+1).padStart(2,'0');
+  const availableMonths = [...new Set(allCases.map(c => monthKeyFromDate(getCombinedDate(c))).filter(Boolean))].sort().reverse();
+
+  if (!window.trendCurrKey && availableMonths.length > 0) {
+      window.trendCurrKey = availableMonths[0]; // Mais recente encontrado na planilha
+  } else if (!window.trendCurrKey) {
+      const now = new Date();
+      window.trendCurrKey = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  }
+
+  if (!window.trendPrevKey && availableMonths.length > 1) {
+      window.trendPrevKey = availableMonths[1]; // Penúltimo mais recente
+  } else if (!window.trendPrevKey) {
+      let [y, m] = window.trendCurrKey.split('-');
+      const prevDate = new Date(y, m-2, 1);
+      window.trendPrevKey = prevDate.getFullYear() + '-' + String(prevDate.getMonth()+1).padStart(2,'0');
+  }
+
+  const currKey = window.trendCurrKey;
+  const prevKey = window.trendPrevKey;
 
   const entriesCurrent = cases.filter(c => monthKeyFromDate(getCombinedDate(c)) === currKey).length;
   const entriesPrevious = cases.filter(c => monthKeyFromDate(getCombinedDate(c)) === prevKey).length;
@@ -1777,7 +1800,7 @@ function getMonthlyTrendData(cases){
   };
 }
 function executiveLineVolume(d, entryVar){
-  if(entryVar > 15) return 'O fluxo de entrada acelerou de forma relevante em relação ao mês anterior.';
+  if(entryVar > 15) return 'O fluxo de entrada acelerou de forma relevante em relação ao mês comparativo.';
   if(entryVar > 5) return 'O volume de entrada avançou em ritmo moderado.';
   if(entryVar < -15) return 'Houve desaceleração importante do volume de entrada.';
   if(entryVar < -5) return 'O fluxo de entrada recuou de forma moderada.';
@@ -1792,7 +1815,7 @@ function executiveLineResolution(d, resolvedVar){
 function executiveLineRisk(highVar){
   if(highVar > 15) return 'O perfil de criticidade piorou, com avanço expressivo dos casos de risco alto.';
   if(highVar > 5) return 'Os casos de risco alto cresceram de forma moderada.';
-  if(highVar < -15) return 'A criticidade recuou de forma relevante frente ao mês anterior.';
+  if(highVar < -15) return 'A criticidade recuou de forma relevante frente ao mês comparativo.';
   if(highVar < -5) return 'Houve leve melhora no perfil de risco.';
   return 'O perfil de risco permaneceu estável no comparativo mensal.';
 }
@@ -1801,19 +1824,19 @@ function executiveLineSla(slaVar){
   if(slaVar > 0.5) return 'Há sinal de pressão adicional sobre o SLA.';
   if(slaVar < -2) return 'O cumprimento de SLA melhorou de forma relevante.';
   if(slaVar < -0.5) return 'Há melhora moderada no comportamento de SLA.';
-  return 'O SLA permaneceu estável no comparativo com o mês anterior.';
+  return 'O SLA permaneceu estável no comparativo com o mês comparativo.';
 }
 function buildTrendAlerts(d, entryVar, resolvedVar, highVar, slaVar){
   const alerts = [];
   const positives = [];
 
   if(d.balanceCurrent > 0) alerts.push(`Entradas acima de resoluções no mês (${balanceCurrentLabel(d.balanceCurrent)}).`);
-  if(highVar > 10) alerts.push(`Casos de risco alto cresceram ${fmtPct(highVar)} frente ao mês anterior.`);
+  if(highVar > 10) alerts.push(`Casos de risco alto cresceram ${fmtPct(highVar)} frente ao mês comparativo.`);
   if(slaVar > 1) alerts.push(`O percentual de SLA estourado avançou ${(slaVar>0?'+':'') + slaVar.toFixed(1).replace('.',',')} p.p. no período.`);
   if(entryVar > 20 && resolvedVar < entryVar) alerts.push('O crescimento do volume está mais acelerado do que a capacidade de saída.');
 
   if(d.balanceCurrent < 0) positives.push(`Resolvidos acima das entradas no mês (${balanceCurrentLabel(d.balanceCurrent)}), favorecendo redução de estoque.`);
-  if(highVar < -5) positives.push(`O volume de risco alto recuou ${fmtPct(highVar)} frente ao mês anterior.`);
+  if(highVar < -5) positives.push(`O volume de risco alto recuou ${fmtPct(highVar)} frente ao mês comparativo.`);
   if(slaVar < -0.5) positives.push(`O SLA melhorou ${(Math.abs(slaVar)).toFixed(1).replace('.',',')} p.p. no comparativo mensal.`);
   if(resolvedVar > 5) positives.push(`A capacidade de resolução cresceu ${fmtPct(resolvedVar)} no mês.`);
 
@@ -1826,6 +1849,29 @@ function capacidadeTrend(d){
 }
 function renderTrendCards(cases){
   const summary = document.getElementById('trendSummaryCard');
+  const dCurr = document.getElementById('trendMonthCurr');
+  const dPrev = document.getElementById('trendMonthPrev');
+
+  if (dCurr && dPrev) {
+      const availableMonths = [...new Set(allCases.map(c => monthKeyFromDate(getCombinedDate(c))).filter(Boolean))].sort().reverse();
+
+      // Função simples de formatação caso a global ainda não exista no escopo
+      const formatLabel = (m) => {
+          let [ano, mes] = m.split('-');
+          const nomes = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+          return `${nomes[parseInt(mes)-1]}/${ano}`;
+      };
+
+      if (dCurr.options.length === 0 || dCurr.dataset.loaded !== "true") {
+          dCurr.innerHTML = availableMonths.map(m => `<option value="${m}">${formatLabel(m)}</option>`).join('');
+          dPrev.innerHTML = availableMonths.map(m => `<option value="${m}">${formatLabel(m)}</option>`).join('');
+          dCurr.dataset.loaded = "true";
+      }
+
+      if (window.trendCurrKey) dCurr.value = window.trendCurrKey;
+      if (window.trendPrevKey) dPrev.value = window.trendPrevKey;
+  }
+
   const cards = document.getElementById('trendCardsGrid');
   const lists = document.getElementById('trendListsGrid');
   if(!summary || !cards || !lists) return;
@@ -1851,9 +1897,9 @@ function renderTrendCards(cases){
   const topDown = d.typeDeltas.filter(x=>x.delta<0).slice(0,3);
 
   const summaryLines = [
-    `As entradas do mês atual ficaram em ${d.entriesCurrent}, contra ${d.entriesPrevious} no mês anterior (${fmtPct(entryVar)}).`,
+    `As entradas do mês analisado ficaram em ${d.entriesCurrent}, contra ${d.entriesPrevious} no mês comparativo (${fmtPct(entryVar)}).`,
     executiveLineVolume(d, entryVar),
-    `Os resolvidos somaram ${d.resolvedCurrent} no período, frente a ${d.resolvedPrevious} no mês anterior (${fmtPct(resolvedVar)}).`,
+    `Os resolvidos somaram ${d.resolvedCurrent} no período, frente a ${d.resolvedPrevious} no mês comparativo (${fmtPct(resolvedVar)}).`,
     executiveLineResolution(d, resolvedVar),
     executiveLineRisk(highVar),
     executiveLineSla(slaVar)
@@ -1871,8 +1917,8 @@ function renderTrendCards(cases){
       title:'Volume',
       meta:`Tendência: <span class="${entryTrend.cls}">${entryTrend.label}</span>`,
       items:[
-        `${d.entriesCurrent} entradas no mês atual.`,
-        `Variação de ${fmtPct(entryVar)} vs mês anterior.`,
+        `${d.entriesCurrent} entradas no mês analisado.`,
+        `Variação de ${fmtPct(entryVar)} vs mês comparativo.`,
         executiveLineVolume(d, entryVar)
       ]
     },
@@ -1889,8 +1935,8 @@ function renderTrendCards(cases){
       title:'Risco',
       meta:`Tendência: <span class="${highTrend.cls}">${highTrend.label}</span>`,
       items:[
-        `${d.highCurrent} casos de risco alto no mês atual.`,
-        `Variação de ${fmtPct(highVar)} vs mês anterior.`,
+        `${d.highCurrent} casos de risco alto no mês analisado.`,
+        `Variação de ${fmtPct(highVar)} vs mês comparativo.`,
         executiveLineRisk(highVar)
       ]
     },
@@ -1899,7 +1945,7 @@ function renderTrendCards(cases){
       meta:`Tendência: <span class="${slaTrend.cls}">${slaTrend.label}</span>`,
       items:[
         `${d.slaCurrentPct.toFixed(1).replace('.',',')}% dos abertos do mês estão fora do SLA.`,
-        `Variação de ${(slaVar>0?'+':'') + slaVar.toFixed(1).replace('.',',')} p.p. vs mês anterior.`,
+        `Variação de ${(slaVar>0?'+':'') + slaVar.toFixed(1).replace('.',',')} p.p. vs mês comparativo.`,
         executiveLineSla(slaVar)
       ]
     }
